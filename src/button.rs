@@ -18,7 +18,7 @@ use crate::theme;
 use druid::widget::prelude::*;
 use druid::widget::{Click, ControllerHost, Label, LabelText};
 
-use druid::{Affine, Data, Insets, LinearGradient, Point, Rect, RenderContext, UnitPoint, Widget};
+use druid::{Affine, Data, Insets, Point, Rect, RenderContext, Widget};
 
 // the minimum padding added to a button.
 // NOTE: these values are chosen to match the existing look of TextBox; these

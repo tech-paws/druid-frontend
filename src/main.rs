@@ -1,4 +1,4 @@
-use druid::widget::{Align, Container, Flex, Label, SizedBox, Split, TextBox};
+use druid::widget::{Align, Container, Flex, Label, SizedBox, Split};
 use druid::{
     AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, LayoutCtx, Lens, LifeCycle,
     LifeCycleCtx, LocalizedString, PaintCtx, Size, UpdateCtx, Widget, WidgetExt, WidgetPod,
@@ -6,9 +6,13 @@ use druid::{
 };
 
 mod button;
+mod focus;
+mod textbox;
 mod theme;
 
 use crate::button::Button;
+use crate::focus::Focus;
+use crate::textbox::TextBox;
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 200.0;
@@ -142,15 +146,22 @@ pub fn main() {
 
 fn build_root_widget() -> impl Widget<HelloState> {
     let label = Label::new(|data: &HelloState, _env: &Env| format!("Hello {}!", data.name));
-    let textbox = TextBox::new()
-        .with_placeholder("Who are we greeting?")
-        .fix_width(TEXT_BOX_WIDTH)
-        .lens(HelloState::name);
 
-    let textbox2 = TextBox::new()
-        .with_placeholder("Who are we greeting?")
-        .fix_width(TEXT_BOX_WIDTH)
-        .lens(HelloState::name);
+    let textbox = Focus::new(
+        TextBox::new()
+            .with_placeholder("Enter the command")
+            .fix_width(TEXT_BOX_WIDTH)
+            .lens(HelloState::name),
+    )
+    .padding(2.0);
+
+    let textbox2 = Focus::new(
+        TextBox::new()
+            .with_placeholder("Who are we greeting?")
+            .fix_width(TEXT_BOX_WIDTH)
+            .lens(HelloState::name),
+    )
+    .padding(2.0);
 
     // let layout = Flex::column().with_flex_child(
     //     // Flex::row()
@@ -190,7 +201,7 @@ fn build_root_widget() -> impl Widget<HelloState> {
                 Container::new(Align::centered(Label::new("Content")))
                     .background(Color::rgb8(0xFF, 0xFF, 0xFF))
                     .rounded(4.0),
-                Container::new(Align::centered(Button::new("Content")))
+                Container::new(Align::centered(Focus::new(Button::new("Content"))))
                     .background(Color::rgb8(0xD8, 0xD8, 0xD8))
                     .rounded(4.0),
             )
@@ -212,10 +223,16 @@ fn build_root_widget() -> impl Widget<HelloState> {
                 )
                 .with_child(
                     SizedBox::new(
-                        Container::new(Label::new("commands_registry"))
-                            .background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
+                        Container::new(textbox).background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
                     )
-                    .height(24.0)
+                    // .height(26.0)
+                    .width(f64::INFINITY),
+                )
+                .with_child(
+                    SizedBox::new(
+                        Container::new(textbox2).background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
+                    )
+                    // .height(26.0)
                     .width(f64::INFINITY),
                 ),
         );

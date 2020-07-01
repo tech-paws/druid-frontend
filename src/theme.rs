@@ -9,6 +9,9 @@ pub const BUTTON_LEAVE_TEXT_COLOR: Key<Color> = Key::new("paws.tech.button_leave
 pub const BUTTON_ENTER_TEXT_COLOR: Key<Color> = Key::new("paws.tech.button_enter_text_color");
 pub const BUTTON_CLICK_TEXT_COLOR: Key<Color> = Key::new("paws.tech.button_click_text_color");
 
+pub const TEXT_BOX_TEXT_COLOR: Key<Color> = Key::new("paws.tech.button_click_text_color");
+pub const FOCUS_BORDER_COLOR: Key<Color> = Key::new("paws.tech.focus_border_color");
+
 pub fn init(env: &mut Env) {
     env.set(WINDOW_BACKGROUND_COLOR, Color::rgb8(0x43, 0x43, 0x43));
     env.set(BORDER_LIGHT, Color::rgba8(0x00, 0x00, 0x00, 0x00));
@@ -22,4 +25,6 @@ pub fn init(env: &mut Env) {
     env.set(BUTTON_CLICK_TEXT_COLOR, Color::rgb8(0xFF, 0xFF, 0xFF));
 
     env.set(TEXT_SIZE_NORMAL, 13.0);
+    env.set(TEXT_BOX_TEXT_COLOR, Color::rgb8(0xFF, 0xFF, 0xFF));
+    env.set(FOCUS_BORDER_COLOR, Color::rgb8(0x3F, 0x8F, 0xFF));
 }
