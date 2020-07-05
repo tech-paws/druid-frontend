@@ -16,10 +16,9 @@
 use crate::theme;
 
 use druid::widget::prelude::*;
-use druid::widget::{Click, ControllerHost, Label, LabelText};
 
 use druid::{
-    Affine, Data, HotKey, Insets, KbKey, Point, Rect, RenderContext, SysMods, Widget, WidgetPod,
+    Data, HotKey, KbKey, Point, Rect, RenderContext, SysMods, Widget, WidgetPod,
 };
 
 pub struct Focus<T> {
@@ -76,7 +75,10 @@ impl<T: Data> Widget<T> for Focus<T> {
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
         match event {
             LifeCycle::WidgetAdded => ctx.register_for_focus(),
-            LifeCycle::FocusChanged(_) => ctx.request_paint(),
+            LifeCycle::FocusChanged(value) => {
+                self.child.set_focus(*value);
+                ctx.request_paint();
+            }
             _ => (),
         }
 
@@ -123,7 +125,7 @@ impl<T: Data> Widget<T> for Focus<T> {
         }
 
         if self.focus_node.is_focused {
-        // if ctx.is_focused() {
+            // if ctx.is_focused() {
             ctx.stroke(rounded_rect, &border_color, 2.0);
         }
     }

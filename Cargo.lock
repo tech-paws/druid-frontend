@@ -118,9 +118,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.56"
+version = "1.0.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c1f1d60091c1b73e2b1f4560ab419204b178e625fa945ded7b660becd2bd46"
+checksum = "0fde55d2a2bfaa4c9668bbc63f531fbdeee3ffe188f4662511ce2c22b3eedebe"
 
 [[package]]
 name = "cfg-if"
@@ -236,7 +236,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "druid"
 version = "0.6.0"
-source = "git+https://github.com/sysint64/druid.git#46b54e228cb01351d8126fad6697a6a4c3cc942b"
+source = "git+https://github.com/sysint64/druid.git#c2e58aba132bdfc5fcf1949c2087a64af56cf81a"
 dependencies = [
  "console_log",
  "druid-derive",
@@ -256,7 +256,7 @@ dependencies = [
 [[package]]
 name = "druid-derive"
 version = "0.3.1"
-source = "git+https://github.com/sysint64/druid.git#46b54e228cb01351d8126fad6697a6a4c3cc942b"
+source = "git+https://github.com/sysint64/druid.git#c2e58aba132bdfc5fcf1949c2087a64af56cf81a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -275,7 +275,7 @@ dependencies = [
 [[package]]
 name = "druid-shell"
 version = "0.6.0"
-source = "git+https://github.com/sysint64/druid.git#46b54e228cb01351d8126fad6697a6a4c3cc942b"
+source = "git+https://github.com/sysint64/druid.git#c2e58aba132bdfc5fcf1949c2087a64af56cf81a"
 dependencies = [
  "anyhow",
  "bitflags",

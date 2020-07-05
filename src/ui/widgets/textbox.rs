@@ -18,14 +18,14 @@ use std::time::Duration;
 
 use druid::{
     Application, BoxConstraints, Cursor, Env, Event, EventCtx, HotKey, KbKey, LayoutCtx, LifeCycle,
-    LifeCycleCtx, PaintCtx, Selector, SysMods, TimerToken, UpdateCtx, Widget,
+    LifeCycleCtx, PaintCtx, Selector, TimerToken, UpdateCtx, Widget,
 };
 
+use crate::theme;
 use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
 use druid::piet::{
     FontBuilder, PietText, PietTextLayout, RenderContext, Text, TextLayout, TextLayoutBuilder,
 };
-use crate::theme;
 
 use druid::text::{
     movement, offset_for_delete_backwards, BasicTextInput, EditAction, EditableText, MouseAction,
@@ -72,12 +72,6 @@ impl TextBox {
     pub fn with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
         self
-    }
-
-    #[deprecated(since = "0.5.0", note = "Use TextBox::new instead")]
-    #[doc(hidden)]
-    pub fn raw() -> TextBox {
-        Self::new()
     }
 
     /// Calculate the PietTextLayout from the given text, font, and font size
@@ -130,6 +124,14 @@ impl TextBox {
             EditAction::Insert(chars) | EditAction::Paste(chars) => self.insert(text, &chars),
             EditAction::Backspace => self.delete_backward(text),
             EditAction::Delete => self.delete_forward(text),
+            EditAction::JumpDelete(movement) => {
+                self.move_selection(movement, text, true);
+                self.delete_forward(text)
+            }
+            EditAction::JumpBackspace(movement) => {
+                self.move_selection(movement, text, true);
+                self.delete_backward(text)
+            }
             EditAction::Move(movement) => self.move_selection(movement, text, false),
             EditAction::ModifySelection(movement) => self.move_selection(movement, text, true),
             EditAction::SelectAll => self.selection.all(text),
@@ -159,7 +161,8 @@ impl TextBox {
             let new_cursor = offset_for_delete_backwards(&self.selection, text);
             text.edit(new_cursor..cursor, "");
             self.caret_to(text, new_cursor);
-        } else {
+        }
+        else {
             text.edit(self.selection.range(), "");
             self.caret_to(text, self.selection.min());
         }
@@ -172,7 +175,8 @@ impl TextBox {
                 self.move_selection(Movement::Right, text, false);
                 self.delete_backward(text);
             }
-        } else {
+        }
+        else {
             self.delete_backward(text);
         }
     }
@@ -192,7 +196,8 @@ impl TextBox {
     fn x_for_offset(&self, layout: &PietTextLayout, offset: usize) -> f64 {
         if let Some(position) = layout.hit_test_text_position(offset) {
             position.point.x
-        } else {
+        }
+        else {
             //TODO: what is the correct fallback here?
             0.0
         }
@@ -210,13 +215,15 @@ impl TextBox {
             // [***I*  ]
             // ^
             self.hscroll_offset = 0.;
-        } else if cursor_x > self.width + self.hscroll_offset - padding {
+        }
+        else if cursor_x > self.width + self.hscroll_offset - padding {
             // If cursor goes past right side, bump the offset
             //       ->
             // **[****I]****
             //   ^
             self.hscroll_offset = cursor_x - self.width + padding;
-        } else if cursor_x < self.hscroll_offset {
+        }
+        else if cursor_x < self.hscroll_offset {
             // If cursor goes past left side, match the offset
             //    <-
             // **[I****]****
@@ -326,7 +333,8 @@ impl Widget<String> for TextBox {
         if let Some(edit_action) = edit_action {
             let is_select_all = if let EditAction::SelectAll = &edit_action {
                 true
-            } else {
+            }
+            else {
                 false
             };
 
@@ -341,10 +349,14 @@ impl Widget<String> for TextBox {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _data: &String, _env: &Env) {
+        println!("{:?}", event);
         match event {
             // LifeCycle::WidgetAdded => ctx.register_for_focus(),
             // an open question: should we be able to schedule timers here?
-            // LifeCycle::FocusChanged(true) => ctx.submit_command(RESET_BLINK, ctx.widget_id()),
+            LifeCycle::FocusChanged(true) => {
+                ctx.submit_command(RESET_BLINK, ctx.widget_id());
+                // std::process::exit(0);
+            }
             _ => (),
         }
     }
@@ -372,7 +384,8 @@ impl Widget<String> for TextBox {
         // Guard against changes in data following `event`
         let content = if data.is_empty() {
             &self.placeholder
-        } else {
+        }
+        else {
             data
         };
 
@@ -381,15 +394,14 @@ impl Widget<String> for TextBox {
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let height = env.get(theme::BORDERED_WIDGET_HEIGHT);
         let selection_color = env.get(theme::SELECTION_COLOR);
-        let text_color = env.get(theme::TEXT_BOX_TEXT_COLOR);
+        let text_color = env.get(theme::LABEL_COLOR);
         let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
-        let is_focused = ctx.is_focused();
+        let is_focused = ctx.has_focus();
 
         // Paint the background
-        let clip_rect = Size::new(self.width - BORDER_WIDTH, height)
-            .to_rect();
+        let clip_rect = Size::new(self.width - BORDER_WIDTH, height).to_rect();
 
         // Render text, selection, and cursor inside a clip
         ctx.with_save(|rc| {
@@ -424,7 +436,8 @@ impl Widget<String> for TextBox {
             let text_pos = Point::new(0.0 + PADDING_LEFT, text_height + PADDING_TOP);
             let color = if data.is_empty() {
                 &placeholder_color
-            } else {
+            }
+            else {
                 &text_color
             };
 
@@ -433,11 +446,11 @@ impl Widget<String> for TextBox {
             // Paint the cursor if focused and there's no selection
             if is_focused && self.cursor_on && self.selection.is_caret() {
                 let cursor_x = self.x_for_offset(&text_layout, self.cursor());
-                let xy = text_pos + Vec2::new(cursor_x, 2. - font_size);
-                let x2y2 = xy + Vec2::new(0., font_size + 2.);
+                let xy = text_pos + Vec2::new(cursor_x, 0. - font_size);
+                let x2y2 = xy + Vec2::new(0., font_size + 4.);
                 let line = Line::new(xy, x2y2);
 
-                rc.stroke(line, &cursor_color, 1.);
+                rc.stroke(line, &cursor_color, 2.);
             }
         });
 

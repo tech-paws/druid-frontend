@@ -5,26 +5,22 @@ use druid::{
     WindowDesc,
 };
 
-mod button;
-mod focus;
-mod textbox;
 mod theme;
+mod ui;
 
-use crate::button::Button;
-use crate::focus::Focus;
-use crate::textbox::TextBox;
+// use crate::ui::widgets::decorators::ButtonDecorator;
+use crate::ui::widgets::AccessorDecorator;
+use crate::ui::widgets::ButtonDecorator;
+use crate::ui::widgets::TextboxDecorator;
+use crate::ui::widgets::Focus;
+use crate::ui::widgets::TextBox;
 
-const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 200.0;
 const WINDOW_TITLE: LocalizedString<HelloState> = LocalizedString::new("Hello World!");
 
 #[derive(Clone, Data, Lens)]
 struct HelloState {
     name: String,
-}
-
-struct MyButton<T> {
-    child: WidgetPod<T, Box<dyn Widget<T>>>,
 }
 
 // use crate::{
@@ -145,7 +141,7 @@ pub fn main() {
 }
 
 fn build_root_widget() -> impl Widget<HelloState> {
-    let label = Label::new(|data: &HelloState, _env: &Env| format!("Hello {}!", data.name));
+    // let label = Label::new(|data: &HelloState, _env: &Env| format!("Hello {}!", data.name));
 
     let textbox = Focus::new(
         TextBox::new()
@@ -195,15 +191,47 @@ fn build_root_widget() -> impl Widget<HelloState> {
     //     1.0,
     // );
 
+    let button = Focus::new(
+        AccessorDecorator::new(
+            ButtonDecorator::new(),
+            Align::centered(
+                Label::new("Content")
+                    .padding((8.0, 2.0))
+            )
+            .fix_width(100.0),
+        )
+        .fix_height(24.0)
+        .on_click(|_, _, _| println!("Hello World!")),
+    );
+
+    let input = AccessorDecorator::new(
+        TextboxDecorator::new(),
+        Focus::new(
+            TextBox::new()
+                .with_placeholder("Enter the command")
+                .fix_width(TEXT_BOX_WIDTH)
+                .lens(HelloState::name),
+        ),
+    )
+    .padding(2.0);
+
     let layout = Stack::new()
         .with_child(
             Split::columns(
                 Container::new(Align::centered(Label::new("Content")))
                     .background(Color::rgb8(0xFF, 0xFF, 0xFF))
                     .rounded(4.0),
-                Container::new(Align::centered(Focus::new(Button::new("Content"))))
-                    .background(Color::rgb8(0xD8, 0xD8, 0xD8))
-                    .rounded(4.0),
+                Container::new(
+                    Align::centered(
+                        Flex::column()
+                            .with_child(Align::centered(button))
+                            .with_child(SizedBox::empty().height(8.0))
+                            .with_child(input)
+                    ),
+                )
+                .fix_height(f64::INFINITY)
+                .background(Color::rgb8(0xD8, 0xD8, 0xD8))
+                .rounded(4.0),
             )
             .split_point(0.7)
             .draggable(true)
