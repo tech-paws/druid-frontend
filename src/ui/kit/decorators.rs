@@ -2,14 +2,17 @@ use crate::theme;
 use crate::ui::widgets::accessor_decorator::{AccessorData, AccessorDecorator};
 use druid::{Color, Point, Rect};
 
+use druid::piet::GradientStop;
 use druid::widget::prelude::*;
-use druid::widget::BackgroundBrush;
 use druid::{LinearGradient, UnitPoint};
-use druid::piet::{FixedLinearGradient, GradientStop};
 
 pub struct ButtonDecorator;
 
 pub struct TextboxDecorator;
+
+pub struct TerminalTextboxDecorator;
+
+pub struct FocusDecorator;
 
 impl ButtonDecorator {
     pub fn new() -> Self {
@@ -17,9 +20,21 @@ impl ButtonDecorator {
     }
 }
 
+impl FocusDecorator {
+    pub fn new() -> Self {
+        FocusDecorator
+    }
+}
+
 impl TextboxDecorator {
     pub fn new() -> Self {
         TextboxDecorator
+    }
+}
+
+impl TerminalTextboxDecorator {
+    pub fn new() -> Self {
+        TerminalTextboxDecorator
     }
 }
 
@@ -35,14 +50,12 @@ impl ButtonColors {
                 bg_color: env.get(theme::BUTTON_CLICK_COLOR),
                 text_color: env.get(theme::BUTTON_CLICK_TEXT_COLOR),
             }
-        }
-        else if data.is_hot {
+        } else if data.is_hot {
             ButtonColors {
                 bg_color: env.get(theme::BUTTON_HOVER_COLOR),
                 text_color: env.get(theme::BUTTON_HOVER_TEXT_COLOR),
             }
-        }
-        else {
+        } else {
             ButtonColors {
                 bg_color: env.get(theme::BUTTON_COLOR),
                 text_color: env.get(theme::BUTTON_TEXT_COLOR),
@@ -63,14 +76,12 @@ impl TextboxColors {
                 bg_color: env.get(theme::TEXT_BOX_CLICK_COLOR),
                 text_color: env.get(theme::TEXT_BOX_CLICK_TEXT_COLOR),
             }
-        }
-        else if data.is_hot {
+        } else if data.is_hot {
             TextboxColors {
                 bg_color: env.get(theme::TEXT_BOX_HOVER_COLOR),
                 text_color: env.get(theme::TEXT_BOX_HOVER_TEXT_COLOR),
             }
-        }
-        else {
+        } else {
             TextboxColors {
                 bg_color: env.get(theme::TEXT_BOX_COLOR),
                 text_color: env.get(theme::TEXT_BOX_TEXT_COLOR),
@@ -131,4 +142,37 @@ impl AccessorDecorator for TextboxDecorator {
         let colors = TextboxColors::new(data, env);
         env.set(theme::LABEL_COLOR, colors.text_color);
     }
+}
+
+impl AccessorDecorator for TerminalTextboxDecorator {
+    fn paint(&mut self, _ctx: &mut PaintCtx, _data: &AccessorData, _env: &Env) {}
+
+    fn set_env(&mut self, _ctx: &mut PaintCtx, _data: &AccessorData, env: &mut Env) {
+        env.set(
+            theme::LABEL_COLOR,
+            env.get(theme::TERMINAL_TEXT_BOX_TEXT_COLOR),
+        );
+        env.set(
+            theme::CURSOR_COLOR,
+            env.get(theme::TERMINAL_TEXT_BOX_TEXT_COLOR),
+        );
+    }
+}
+
+impl AccessorDecorator for FocusDecorator {
+    fn paint(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+        if data.has_focus {
+            let size = ctx.size();
+
+            let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
+                .inset(2.0 / -2.0)
+                .to_rounded_rect(env.get(theme::BUTTON_BORDER_RADIUS));
+
+            let border_color = env.get(theme::FOCUS_BORDER_COLOR);
+
+            ctx.stroke(rounded_rect, &border_color, 2.0);
+        }
+    }
+
+    fn set_env(&mut self, _ctx: &mut PaintCtx, _data: &AccessorData, env: &mut Env) {}
 }

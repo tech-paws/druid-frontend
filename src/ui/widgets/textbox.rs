@@ -398,7 +398,7 @@ impl Widget<String> for TextBox {
         let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
-        let is_focused = ctx.has_focus();
+        let is_focused = ctx.inside_focus();
 
         // Paint the background
         let clip_rect = Size::new(self.width - BORDER_WIDTH, height).to_rect();

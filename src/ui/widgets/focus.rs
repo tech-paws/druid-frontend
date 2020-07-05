@@ -13,27 +13,21 @@
 // limitations under the License.
 
 //! A button widget.
+
+use std::sync::Arc;
 use crate::theme;
 
 use druid::widget::prelude::*;
 
 use druid::{
-    Data, HotKey, KbKey, Point, Rect, RenderContext, SysMods, Widget, WidgetPod,
+    Data, HotKey, KbKey, Point, Rect, RenderContext, SysMods, Widget, WidgetPod, FocusNode
 };
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct Focus<T> {
     child: WidgetPod<T, Box<dyn Widget<T>>>,
     focus_node: FocusNode,
-}
-
-pub struct FocusNode {
-    pub is_focused: bool,
-}
-
-impl FocusNode {
-    pub fn new() -> Self {
-        FocusNode { is_focused: false }
-    }
 }
 
 impl<T: Data> Focus<T> {
@@ -69,6 +63,7 @@ impl<T: Data> Widget<T> for Focus<T> {
             _ => (),
         }
 
+        ctx.set_focus_node(self.focus_node.clone());
         self.child.event(ctx, event, data, env);
     }
 
@@ -76,57 +71,32 @@ impl<T: Data> Widget<T> for Focus<T> {
         match event {
             LifeCycle::WidgetAdded => ctx.register_for_focus(),
             LifeCycle::FocusChanged(value) => {
-                self.child.set_focus(*value);
+                self.focus_node.is_focused = *value;
                 ctx.request_paint();
             }
             _ => (),
         }
 
+        ctx.set_focus_node(self.focus_node.clone());
         self.child.lifecycle(ctx, event, data, env);
     }
 
     fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &T, data: &T, env: &Env) {
+        ctx.set_focus_node(self.focus_node.clone());
         self.child.update(ctx, data, env);
     }
 
     fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
-        bc.debug_check("Focus");
-
-        let border_width = 2.0;
-        let child_bc = bc.shrink((2.0 * border_width, 2.0 * border_width));
-        let size = self.child.layout(ctx, &child_bc, data, env);
-
-        let origin = Point::new(border_width, border_width);
-        let rect = Rect::from_origin_size(origin, size);
-
+        ctx.set_focus_node(self.focus_node.clone());
+        let size = self.child.layout(ctx, &bc, data, env);
+        let rect = Rect::from_origin_size(Point::ORIGIN, size);
         self.child.set_layout_rect(ctx, data, env, rect);
 
-        let my_size = Size::new(
-            size.width + 2.0 * border_width,
-            size.height + 2.0 * border_width,
-        );
-
-        my_size
+        size
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
-        let size = ctx.size();
-
-        let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
-            .inset(2.0 / -2.0)
-            .to_rounded_rect(env.get(theme::BUTTON_BORDER_RADIUS));
-
-        let border_color = env.get(theme::FOCUS_BORDER_COLOR);
-
+        ctx.set_focus_node(self.focus_node.clone());
         self.child.paint(ctx, data, env);
-
-        if self.focus_node.is_focused != ctx.is_focused() {
-            self.focus_node.is_focused = ctx.is_focused();
-        }
-
-        if self.focus_node.is_focused {
-            // if ctx.is_focused() {
-            ctx.stroke(rounded_rect, &border_color, 2.0);
-        }
     }
 }
