@@ -91,7 +91,7 @@ impl TextboxColors {
 }
 
 impl AccessorDecorator for ButtonDecorator {
-    fn paint(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+    fn paint_background(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
         let size = ctx.size();
 
         let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
@@ -108,7 +108,7 @@ impl AccessorDecorator for ButtonDecorator {
 }
 
 impl AccessorDecorator for TextboxDecorator {
-    fn paint(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+    fn paint_background(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
         let size = ctx.size();
 
         let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
@@ -145,8 +145,6 @@ impl AccessorDecorator for TextboxDecorator {
 }
 
 impl AccessorDecorator for TerminalTextboxDecorator {
-    fn paint(&mut self, _ctx: &mut PaintCtx, _data: &AccessorData, _env: &Env) {}
-
     fn set_env(&mut self, _ctx: &mut PaintCtx, _data: &AccessorData, env: &mut Env) {
         env.set(
             theme::LABEL_COLOR,
@@ -160,7 +158,7 @@ impl AccessorDecorator for TerminalTextboxDecorator {
 }
 
 impl AccessorDecorator for FocusDecorator {
-    fn paint(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+    fn paint_foreground(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
         if data.has_focus {
             let size = ctx.size();
 
@@ -173,6 +171,4 @@ impl AccessorDecorator for FocusDecorator {
             ctx.stroke(rounded_rect, &border_color, 2.0);
         }
     }
-
-    fn set_env(&mut self, _ctx: &mut PaintCtx, _data: &AccessorData, env: &mut Env) {}
 }

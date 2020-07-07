@@ -5,14 +5,16 @@ mod theme;
 mod ui;
 
 use crate::ui::widgets::AccessorDecorator;
+use crate::ui::widgets::EditableText;
 use crate::ui::widgets::Focus;
+use crate::ui::widgets::FocusScope;
 use crate::ui::widgets::Stack;
 use crate::ui::widgets::TextBox;
 
 use crate::ui::kit::ButtonDecorator;
-use crate::ui::kit::TextboxDecorator;
-use crate::ui::kit::TerminalTextboxDecorator;
 use crate::ui::kit::FocusDecorator;
+use crate::ui::kit::TerminalTextboxDecorator;
+use crate::ui::kit::TextboxDecorator;
 
 const TEXT_BOX_WIDTH: f64 = 200.0;
 const WINDOW_TITLE: LocalizedString<HelloState> = LocalizedString::new("Hello World!");
@@ -27,9 +29,7 @@ pub fn main() {
         .title(WINDOW_TITLE)
         .window_size((400.0, 400.0));
 
-    let initial_state = HelloState {
-        name: "".into(),
-    };
+    let initial_state = HelloState { name: "".into() };
 
     AppLauncher::with_window(main_window)
         .configure_env(|env, _| theme::init(env))
@@ -38,58 +38,37 @@ pub fn main() {
 }
 
 fn build_root_widget() -> impl Widget<HelloState> {
-    let terminal_textbox =
+    let terminal_textbox = AccessorDecorator::new(
+        TerminalTextboxDecorator::new(),
+        Focus::new(
+            EditableText::new()
+                .with_placeholder("Enter the command")
+                .fix_width(TEXT_BOX_WIDTH)
+                .lens(HelloState::name),
+        ),
+    )
+    .padding(2.0);
+
+    let button = Focus::new(AccessorDecorator::new(
+        FocusDecorator::new(),
         AccessorDecorator::new(
-            TerminalTextboxDecorator::new(),
-            Focus::new(
-                TextBox::new()
-                    .with_placeholder("Enter the command")
-                    .fix_width(TEXT_BOX_WIDTH)
-                    .lens(HelloState::name)
-            ),
+            ButtonDecorator::new(),
+            Align::centered(Label::new("Content").padding((8.0, 2.0))).fix_width(100.0),
         )
-        .padding(2.0);
+        .fix_height(24.0)
+        .on_click(|_, _, _| println!("Hello World!"))
+        .padding(2.0),
+    ));
 
-    let button = Focus::new(
-        AccessorDecorator::new(
-            FocusDecorator::new(),
-            AccessorDecorator::new(
-                ButtonDecorator::new(),
-                Align::centered(Label::new("Content").padding((8.0, 2.0))).fix_width(100.0),
-            )
-            .fix_height(24.0)
-            .on_click(|_, _, _| println!("Hello World!"))
-            .padding(2.0),
-        ),
-    );
+    let input = TextBox::new()
+        .with_placeholder("Hint")
+        .fix_width(TEXT_BOX_WIDTH)
+        .lens(HelloState::name);
 
-    let input = Focus::new(
-        AccessorDecorator::new(
-            FocusDecorator::new(),
-            AccessorDecorator::new(
-                TextboxDecorator::new(),
-                TextBox::new()
-                    .with_placeholder("Enter the command")
-                    .fix_width(TEXT_BOX_WIDTH)
-                    .lens(HelloState::name),
-            )
-            .padding(2.0),
-        ),
-    );
-
-    let input2 = Focus::new(
-        AccessorDecorator::new(
-            FocusDecorator::new(),
-            AccessorDecorator::new(
-                TextboxDecorator::new(),
-                TextBox::new()
-                    .with_placeholder("Enter the command")
-                    .fix_width(TEXT_BOX_WIDTH)
-                    .lens(HelloState::name),
-            )
-                .padding(2.0),
-        ),
-    );
+    let input2 = TextBox::new()
+        .with_placeholder("Lol")
+        .fix_width(TEXT_BOX_WIDTH)
+        .lens(HelloState::name);
 
     let layout = Stack::new()
         .with_child(
@@ -116,7 +95,7 @@ fn build_root_widget() -> impl Widget<HelloState> {
             .min_bar_area(3.0)
             .min_size(60.0),
         )
-        .with_child(
+        .with_child(FocusScope::new(
             Flex::column()
                 .with_child(
                     SizedBox::new(
@@ -127,11 +106,12 @@ fn build_root_widget() -> impl Widget<HelloState> {
                 )
                 .with_child(
                     SizedBox::new(
-                        Container::new(terminal_textbox).background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
+                        Container::new(terminal_textbox)
+                            .background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
                     )
                     .width(f64::INFINITY),
-                )
-        );
+                ),
+        ));
 
     Align::centered(layout)
 }

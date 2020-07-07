@@ -14,19 +14,19 @@
 
 //! A button widget.
 
-use std::sync::Arc;
 use crate::theme;
+use std::sync::Arc;
 
 use druid::widget::prelude::*;
 
 use druid::{
-    Data, HotKey, KbKey, Point, Rect, RenderContext, SysMods, Widget, WidgetPod, FocusNode
+    Data, FocusNode, HotKey, KbKey, Point, Rect, RenderContext, SysMods, Widget, WidgetPod,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
 
 pub struct Focus<T> {
-    child: WidgetPod<T, Box<dyn Widget<T>>>,
+    pub(crate) child: WidgetPod<T, Box<dyn Widget<T>>>,
     focus_node: FocusNode,
 }
 
@@ -69,7 +69,10 @@ impl<T: Data> Widget<T> for Focus<T> {
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
         match event {
-            LifeCycle::WidgetAdded => ctx.register_for_focus(),
+            LifeCycle::WidgetAdded => {
+                self.focus_node.widget_id = Some(ctx.widget_id());
+                ctx.register_for_focus()
+            }
             LifeCycle::FocusChanged(value) => {
                 self.focus_node.is_focused = *value;
                 ctx.request_paint();

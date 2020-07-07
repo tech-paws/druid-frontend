@@ -10,7 +10,7 @@ pub struct AccessorData {
 }
 
 pub struct AccessorDecoratorWidget<T, A: AccessorDecorator> {
-    child: WidgetPod<T, Box<dyn Widget<T>>>,
+    pub(crate) child: WidgetPod<T, Box<dyn Widget<T>>>,
     decorator: A,
 }
 
@@ -24,9 +24,14 @@ impl<T: Data, A: AccessorDecorator> AccessorDecoratorWidget<T, A> {
 }
 
 pub trait AccessorDecorator {
-    fn paint(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env);
+    fn paint_background(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+    }
 
-    fn set_env(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &mut Env);
+    fn paint_foreground(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+    }
+
+    fn set_env(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &mut Env) {
+    }
 }
 
 impl<T: Data, A: AccessorDecorator> Widget<T> for AccessorDecoratorWidget<T, A> {
@@ -74,9 +79,12 @@ impl<T: Data, A: AccessorDecorator> Widget<T> for AccessorDecoratorWidget<T, A> 
             has_focus: ctx.inside_focus(),
         };
 
-        self.decorator.paint(ctx, &accessor_data, env);
+        self.decorator.paint_background(ctx, &accessor_data, env);
+
         let mut new_env = env.clone();
         self.decorator.set_env(ctx, &accessor_data, &mut new_env);
         self.child.paint(ctx, data, &new_env);
+
+        self.decorator.paint_foreground(ctx, &accessor_data, env);
     }
 }
