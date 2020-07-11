@@ -22,6 +22,7 @@ const WINDOW_TITLE: LocalizedString<HelloState> = LocalizedString::new("Hello Wo
 #[derive(Clone, Data, Lens)]
 struct HelloState {
     name: String,
+    title: String,
 }
 
 pub fn main() {
@@ -29,7 +30,10 @@ pub fn main() {
         .title(WINDOW_TITLE)
         .window_size((400.0, 400.0));
 
-    let initial_state = HelloState { name: "".into() };
+    let initial_state = HelloState {
+        name: "".into(),
+        title: "".into(),
+    };
 
     AppLauncher::with_window(main_window)
         .configure_env(|env, _| theme::init(env))
@@ -47,7 +51,7 @@ fn build_root_widget() -> impl Widget<HelloState> {
                 .lens(HelloState::name),
         ),
     )
-    .padding(2.0);
+        .padding(2.0);
 
     let button = Focus::new(AccessorDecorator::new(
         FocusDecorator::new(),
@@ -55,9 +59,9 @@ fn build_root_widget() -> impl Widget<HelloState> {
             ButtonDecorator::new(),
             Align::centered(Label::new("Content").padding((8.0, 2.0))).fix_width(100.0),
         )
-        .fix_height(24.0)
-        .on_click(|_, _, _| println!("Hello World!"))
-        .padding(2.0),
+            .fix_height(24.0)
+            .on_click(|_, _, _| println!("Hello World!"))
+            .padding(2.0),
     ));
 
     let input = TextBox::new()
@@ -66,34 +70,36 @@ fn build_root_widget() -> impl Widget<HelloState> {
         .lens(HelloState::name);
 
     let input2 = TextBox::new()
-        .with_placeholder("Lol")
+        .with_placeholder("")
         .fix_width(TEXT_BOX_WIDTH)
-        .lens(HelloState::name);
+        .lens(HelloState::title);
 
     let layout = Stack::new()
         .with_child(
-            Split::columns(
-                Container::new(SizedBox::empty().expand())
-                    .background(Color::rgb8(0xFF, 0xFF, 0xFF))
-                    .rounded(4.0),
-                Container::new(Align::centered(
-                    Flex::column()
-                        .with_child(Align::centered(button))
-                        .with_child(SizedBox::empty().height(8.0))
-                        .with_child(input)
-                        .with_child(SizedBox::empty().height(8.0))
-                        .with_child(input2),
-                ))
-                .fix_height(f64::INFINITY)
-                .background(Color::rgb8(0xD8, 0xD8, 0xD8))
-                .rounded(4.0),
-            )
-            .split_point(0.7)
-            .draggable(true)
-            .solid_bar(true)
-            .bar_size(3.0)
-            .min_bar_area(3.0)
-            .min_size(60.0),
+            FocusScope::new(
+                Split::columns(
+                    Container::new(SizedBox::empty().expand())
+                        .background(Color::rgb8(0xFF, 0xFF, 0xFF))
+                        .rounded(4.0),
+                    Container::new(Align::centered(
+                        Flex::column()
+                            .with_child(Align::centered(button))
+                            .with_child(SizedBox::empty().height(8.0))
+                            .with_child(input)
+                            .with_child(SizedBox::empty().height(8.0))
+                            .with_child(FocusScope::new(input2)),
+                    ))
+                        .fix_height(f64::INFINITY)
+                        .background(Color::rgb8(0xD8, 0xD8, 0xD8))
+                        .rounded(4.0),
+                )
+                    .split_point(0.7)
+                    .draggable(true)
+                    .solid_bar(true)
+                    .bar_size(3.0)
+                    .min_bar_area(3.0)
+                    .min_size(60.0),
+            ),
         )
         .with_child(FocusScope::new(
             Flex::column()
@@ -102,14 +108,14 @@ fn build_root_widget() -> impl Widget<HelloState> {
                         Container::new(SizedBox::empty().expand())
                             .background(Color::rgba(0.0, 0.0, 0.0, 0.7)),
                     )
-                    .height(150.0),
+                        .height(150.0),
                 )
                 .with_child(
                     SizedBox::new(
                         Container::new(terminal_textbox)
                             .background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
                     )
-                    .width(f64::INFINITY),
+                        .width(f64::INFINITY),
                 ),
         ));
 

@@ -34,13 +34,15 @@ impl<T: Data> Focus<T> {
     pub fn new(child: impl Widget<T> + 'static) -> Self {
         Focus {
             child: WidgetPod::new(child).boxed(),
-            focus_node: FocusNode::new(),
+            focus_node: FocusNode::empty(),
         }
     }
 }
 
 impl<T: Data> Widget<T> for Focus<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
+        ctx.set_focus_node(self.focus_node.clone());
+
         match event {
             Event::MouseDown(_) => {
                 ctx.request_focus();
@@ -63,7 +65,6 @@ impl<T: Data> Widget<T> for Focus<T> {
             _ => (),
         }
 
-        ctx.set_focus_node(self.focus_node.clone());
         self.child.event(ctx, event, data, env);
     }
 
@@ -71,6 +72,7 @@ impl<T: Data> Widget<T> for Focus<T> {
         match event {
             LifeCycle::WidgetAdded => {
                 self.focus_node.widget_id = Some(ctx.widget_id());
+                ctx.set_focus_node(self.focus_node.clone());
                 ctx.register_for_focus()
             }
             LifeCycle::FocusChanged(value) => {

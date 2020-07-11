@@ -24,10 +24,14 @@ use crate::theme;
 use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
 
 use crate::ui::kit::decorators::*;
+use crate::ui::widgets::editable_text::TEXT_BOX_PLACEHOLDER;
 use crate::ui::widgets::AccessorDecorator;
 use crate::ui::widgets::EditableText;
 use crate::ui::widgets::Focus;
-use crate::ui::widgets::editable_text::TEXT_BOX_PLACEHOLDER;
+
+trait SetEnv {
+    fn set_env(&mut self, env: &mut Env) {}
+}
 
 /// A widget that allows user text input.
 pub struct TextBox {
@@ -35,13 +39,18 @@ pub struct TextBox {
     child: WidgetPod<String, Box<dyn Widget<String>>>,
 }
 
+impl SetEnv for TextBox {
+    fn set_env(&mut self, env: &mut Env) {
+        env.set(TEXT_BOX_PLACEHOLDER, &self.placeholder);
+    }
+}
+
 impl TextBox {
     /// Create a new TextBox widget
     pub fn new() -> TextBox {
-        let editable_text = EditableText::new();
         let decorator = Focus::new(AccessorDecorator::new(
             FocusDecorator::new(),
-            AccessorDecorator::new(TextboxDecorator::new(), editable_text).padding(1.0),
+            AccessorDecorator::new(TextboxDecorator::new(), EditableText::new()).padding(1.0),
         ));
 
         Self {
@@ -57,6 +66,7 @@ impl TextBox {
     }
 }
 
+
 impl<'a> Widget<String> for TextBox {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut String, env: &Env) {
         self.child.event(ctx, event, data, env);
@@ -67,10 +77,16 @@ impl<'a> Widget<String> for TextBox {
     }
 
     fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &String, data: &String, env: &Env) {
-        ctx.request_paint();
+        self.child.update(ctx, data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &String, env: &Env) -> Size {
+    fn layout(
+        &mut self,
+        ctx: &mut LayoutCtx,
+        bc: &BoxConstraints,
+        data: &String,
+        env: &Env,
+    ) -> Size {
         let size = self.child.layout(ctx, &bc, data, env);
         let rect = Rect::from_origin_size(Point::ORIGIN, size);
         self.child.set_layout_rect(ctx, data, env, rect);
@@ -80,7 +96,7 @@ impl<'a> Widget<String> for TextBox {
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &String, env: &Env) {
         let mut new_env = env.clone();
-        new_env.set(TEXT_BOX_PLACEHOLDER, &self.placeholder);
+        self.set_env(&mut new_env);
         self.child.paint(ctx, data, &new_env);
     }
 }
