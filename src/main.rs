@@ -1,4 +1,4 @@
-use druid::widget::{Align, Container, Flex, Label, SizedBox, Split};
+use druid::widget::{Align, Container, Flex, Label, SizedBox, Split, Focus, FocusScope};
 use druid::{AppLauncher, Color, Data, Lens, LocalizedString, Widget, WidgetExt, WindowDesc};
 
 mod theme;
@@ -6,8 +6,8 @@ mod ui;
 
 use crate::ui::widgets::AccessorDecorator;
 use crate::ui::widgets::EditableText;
-use crate::ui::widgets::Focus;
-use crate::ui::widgets::FocusScope;
+// use crate::ui::widgets::Focus;
+// use crate::ui::widgets::FocusScope;
 use crate::ui::widgets::Stack;
 use crate::ui::widgets::TextBox;
 
