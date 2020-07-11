@@ -1,5 +1,5 @@
 use druid::widget::prelude::*;
-use druid::{Widget, WidgetPod, Data, Rect, Point, FocusScopeNode};
+use druid::{Data, FocusScopeNode, Point, Rect, Widget, WidgetPod};
 
 pub struct FocusScope<T> {
     child: WidgetPod<T, Box<dyn Widget<T>>>,

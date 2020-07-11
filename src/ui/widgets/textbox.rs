@@ -66,7 +66,6 @@ impl TextBox {
     }
 }
 
-
 impl<'a> Widget<String> for TextBox {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut String, env: &Env) {
         self.child.event(ctx, event, data, env);

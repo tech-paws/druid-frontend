@@ -50,12 +50,14 @@ impl ButtonColors {
                 bg_color: env.get(theme::BUTTON_CLICK_COLOR),
                 text_color: env.get(theme::BUTTON_CLICK_TEXT_COLOR),
             }
-        } else if data.is_hot {
+        }
+        else if data.is_hot {
             ButtonColors {
                 bg_color: env.get(theme::BUTTON_HOVER_COLOR),
                 text_color: env.get(theme::BUTTON_HOVER_TEXT_COLOR),
             }
-        } else {
+        }
+        else {
             ButtonColors {
                 bg_color: env.get(theme::BUTTON_COLOR),
                 text_color: env.get(theme::BUTTON_TEXT_COLOR),
@@ -76,12 +78,14 @@ impl TextboxColors {
                 bg_color: env.get(theme::TEXT_BOX_CLICK_COLOR),
                 text_color: env.get(theme::TEXT_BOX_CLICK_TEXT_COLOR),
             }
-        } else if data.is_hot {
+        }
+        else if data.is_hot {
             TextboxColors {
                 bg_color: env.get(theme::TEXT_BOX_HOVER_COLOR),
                 text_color: env.get(theme::TEXT_BOX_HOVER_TEXT_COLOR),
             }
-        } else {
+        }
+        else {
             TextboxColors {
                 bg_color: env.get(theme::TEXT_BOX_COLOR),
                 text_color: env.get(theme::TEXT_BOX_TEXT_COLOR),
