@@ -21,6 +21,8 @@ use druid::{
     LifeCycle, LifeCycleCtx, PaintCtx, Selector, TimerToken, UpdateCtx, Widget,
 };
 
+use druid::commands;
+
 use crate::theme;
 use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
 use druid::piet::{
@@ -138,6 +140,8 @@ impl EditableText {
             EditAction::Move(movement) => self.move_selection(movement, text, false),
             EditAction::ModifySelection(movement) => self.move_selection(movement, text, true),
             EditAction::SelectAll => self.selection.all(text),
+            // TODO: https://github.com/linebender/druid/pull/1092
+            // EditAction::SelectNone => self.selection.none(),
             EditAction::Click(action) => {
                 if action.mods.shift() {
                     self.selection.end = action.column;
@@ -302,6 +306,18 @@ impl Widget<String> for EditableText {
                     edit_action = Some(EditAction::Delete);
                 }
                 ctx.set_handled();
+            }
+            Event::Command(cmd) if cmd.is(commands::FOCUS_NODE_FOCUS_CHANGED) => {
+                self.reset_cursor_blink(ctx);
+                let is_focused = *cmd.get_unchecked(commands::FOCUS_NODE_FOCUS_CHANGED);
+
+                if is_focused {
+                    self.do_edit_action(EditAction::SelectAll, data);
+                }
+                else {
+                    // TODO: https://github.com/linebender/druid/pull/1092
+                    // self.do_edit_action(EditAction::SelectNone, data);
+                }
             }
             Event::Command(cmd) if cmd.is(RESET_BLINK) => self.reset_cursor_blink(ctx),
             Event::Command(cmd) if cmd.is(EditableText::PERFORM_EDIT) => {

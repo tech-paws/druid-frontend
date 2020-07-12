@@ -26,7 +26,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 pub struct Focus<T> {
-    pub(crate) child: WidgetPod<T, Box<dyn Widget<T>>>,
+    child: WidgetPod<T, Box<dyn Widget<T>>>,
     focus_node: FocusNode,
 }
 
@@ -41,6 +41,7 @@ impl<T: Data> Focus<T> {
 
 impl<T: Data> Widget<T> for Focus<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
+        ctx.submit_command(RE, ctx.widget_id());
         ctx.set_focus_node(self.focus_node.clone());
 
         match event {

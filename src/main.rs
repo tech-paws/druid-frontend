@@ -3,6 +3,7 @@ use druid::{AppLauncher, Color, Data, Lens, LocalizedString, Widget, WidgetExt, 
 
 mod theme;
 mod ui;
+mod work_area;
 
 use crate::ui::widgets::AccessorDecorator;
 use crate::ui::widgets::EditableText;
@@ -15,6 +16,9 @@ use crate::ui::kit::ButtonDecorator;
 use crate::ui::kit::FocusDecorator;
 use crate::ui::kit::TerminalTextboxDecorator;
 use crate::ui::kit::TextboxDecorator;
+
+use crate::work_area::WorkArea;
+use tech_paws_core;
 
 const TEXT_BOX_WIDTH: f64 = 200.0;
 const WINDOW_TITLE: LocalizedString<HelloState> = LocalizedString::new("Hello World!");
@@ -34,6 +38,8 @@ pub fn main() {
         name: "".into(),
         title: "".into(),
     };
+
+    tech_paws_core::init_world();
 
     AppLauncher::with_window(main_window)
         .configure_env(|env, _| theme::init(env))
@@ -62,8 +68,7 @@ fn build_root_widget() -> impl Widget<HelloState> {
         .fix_height(24.0)
         .on_click(|_, _, _| println!("Hello World!"))
         .padding(2.0),
-    ))
-    .with_auto_focus(true);
+    ));
 
     let input = TextBox::new()
         .with_placeholder("Hint")
@@ -78,17 +83,19 @@ fn build_root_widget() -> impl Widget<HelloState> {
     let layout = Stack::new()
         .with_child(FocusScope::new(
             Split::columns(
-                Container::new(SizedBox::empty().expand())
-                    .background(Color::rgb8(0xFF, 0xFF, 0xFF))
-                    .rounded(4.0),
-                Container::new(Align::centered(
-                    Flex::column()
-                        .with_child(Align::centered(button))
+                // Container::new(SizedBox::empty().expand())
+                //     .background(Color::rgb8(0xFF, 0xFF, 0xFF))
+                //     .rounded(4.0),
+                WorkArea::new(),
+                // Align::centered(
+                Flex::column()
+                    .with_child(SizedBox::empty().height(400.0))
+                        .with_child(button)
                         .with_child(SizedBox::empty().height(8.0))
                         .with_child(input)
                         .with_child(SizedBox::empty().height(8.0))
-                        .with_child(input2),
-                ))
+                        .with_child(input2)
+                // )
                 .fix_height(f64::INFINITY)
                 .background(Color::rgb8(0xD8, 0xD8, 0xD8))
                 .rounded(4.0),
@@ -99,24 +106,24 @@ fn build_root_widget() -> impl Widget<HelloState> {
             .bar_size(3.0)
             .min_bar_area(3.0)
             .min_size(60.0),
-        ))
-        .with_child(FocusScope::new(
-            Flex::column()
-                .with_child(
-                    SizedBox::new(
-                        Container::new(SizedBox::empty().expand())
-                            .background(Color::rgba(0.0, 0.0, 0.0, 0.7)),
-                    )
-                    .height(150.0),
-                )
-                .with_child(
-                    SizedBox::new(
-                        Container::new(terminal_textbox)
-                            .background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
-                    )
-                    .width(f64::INFINITY),
-                ),
         ));
+        // .with_child(FocusScope::new(
+        //     Flex::column()
+        //         .with_child(
+        //             SizedBox::new(
+        //                 Container::new(SizedBox::empty().expand())
+        //                     .background(Color::rgba(0.0, 0.0, 0.0, 0.7)),
+        //             )
+        //             .height(150.0),
+        //         )
+        //         .with_child(
+        //             SizedBox::new(
+        //                 Container::new(terminal_textbox)
+        //                     .background(Color::rgba(0.0, 0.0, 0.0, 0.8)),
+        //             )
+        //             .width(f64::INFINITY),
+        //         ),
+        // ));
 
     Align::centered(layout)
 }

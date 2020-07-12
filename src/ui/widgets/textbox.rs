@@ -19,6 +19,8 @@ use druid::{
     LifeCycleCtx, PaintCtx, Rect, Selector, TimerToken, UpdateCtx, Widget, WidgetExt, WidgetPod,
 };
 
+use druid::widget::Focus;
+
 use crate::theme;
 
 use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
@@ -27,7 +29,7 @@ use crate::ui::kit::decorators::*;
 use crate::ui::widgets::editable_text::TEXT_BOX_PLACEHOLDER;
 use crate::ui::widgets::AccessorDecorator;
 use crate::ui::widgets::EditableText;
-use crate::ui::widgets::Focus;
+// use crate::ui::widgets::Focus;
 
 trait SetEnv {
     fn set_env(&mut self, env: &mut Env) {}
@@ -50,7 +52,7 @@ impl TextBox {
     pub fn new() -> TextBox {
         let decorator = Focus::new(AccessorDecorator::new(
             FocusDecorator::new(),
-            AccessorDecorator::new(TextboxDecorator::new(), EditableText::new()).padding(1.0),
+            AccessorDecorator::new(TextboxDecorator::new(), EditableText::new()).padding(2.0),
         ));
 
         Self {

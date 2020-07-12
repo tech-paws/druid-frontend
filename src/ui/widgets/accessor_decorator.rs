@@ -24,11 +24,11 @@ impl<T: Data, A: AccessorDecorator> AccessorDecoratorWidget<T, A> {
 }
 
 pub trait AccessorDecorator {
-    fn paint_background(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {}
+    fn paint_background(&mut self, _: &mut PaintCtx, _: &AccessorData, _: &Env) {}
 
-    fn paint_foreground(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {}
+    fn paint_foreground(&mut self, _: &mut PaintCtx, _: &AccessorData, _: &Env) {}
 
-    fn set_env(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &mut Env) {}
+    fn set_env(&mut self, _: &mut PaintCtx, _: &AccessorData, _: &mut Env) {}
 }
 
 impl<T: Data, A: AccessorDecorator> Widget<T> for AccessorDecoratorWidget<T, A> {

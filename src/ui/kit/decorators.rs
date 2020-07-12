@@ -116,6 +116,7 @@ impl AccessorDecorator for TextboxDecorator {
         let size = ctx.size();
 
         let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
+            .inset(0.5)
             .to_rounded_rect(env.get(theme::BUTTON_BORDER_RADIUS));
 
         let colors = TextboxColors::new(data, env);
@@ -167,7 +168,7 @@ impl AccessorDecorator for FocusDecorator {
             let size = ctx.size();
 
             let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
-                .inset(2.0 / -2.0)
+                .inset(-2.0)
                 .to_rounded_rect(env.get(theme::BUTTON_BORDER_RADIUS));
 
             let border_color = env.get(theme::FOCUS_BORDER_COLOR);

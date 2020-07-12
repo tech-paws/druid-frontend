@@ -49,8 +49,8 @@ pub fn init(env: &mut Env) {
 
     env.set(TEXT_SIZE_NORMAL, 12.0);
     // env.set(TEXT_BOX_TEXT_COLOR, Color::rgb8(0xFF, 0xFF, 0xFF));
-    // env.set(TEXT_BOX_BORDER_COLOR, Color::rgb8(0xB8, 0xB8, 0xB8));
-    env.set(TEXT_BOX_BORDER_COLOR, Color::rgb8(0x00, 0x00, 0x00));
+    env.set(TEXT_BOX_BORDER_COLOR, Color::rgb8(0xB8, 0xB8, 0xB8));
+    // env.set(TEXT_BOX_BORDER_COLOR, Color::rgb8(0x00, 0x00, 0x00));
     env.set(FOCUS_BORDER_COLOR, Color::rgb8(0x3F, 0x8F, 0xFF));
     env.set(TERMINAL_TEXT_BOX_TEXT_COLOR, Color::rgb8(0xFF, 0xFF, 0xFF));
     env.set(

@@ -1,3 +1,6 @@
 [submodule "druid"]
 	path = druid
 	url = git@github.com:sysint64/druid.git
+[submodule "core"]
+	path = core
+	url = git@github.com:tech-paws/core.git

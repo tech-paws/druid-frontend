@@ -41,7 +41,8 @@ impl<T: Data> Widget<T> for FocusScope<T> {
 
     fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
         ctx.set_focus_scope_node(self.focus_scope_node.clone());
-        let size = self.child.layout(ctx, &bc, data, env);
+
+            let size = self.child.layout(ctx, &bc, data, env);
         let rect = Rect::from_origin_size(Point::ORIGIN, size);
         self.child.set_layout_rect(ctx, data, env, rect);
 
