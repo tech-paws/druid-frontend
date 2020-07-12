@@ -237,12 +237,6 @@ impl<T: Data> Widget<T> for WorkArea<T> {
             }
             Event::Timer(id) => {
                 if *id == self.timer_id {
-                    tech_paws_core::frame_start();
-                    tech_paws_core::step();
-
-                    self.flush();
-                    self.handle_exec_commands();
-
                     ctx.request_paint();
                     let deadline = Duration::from_nanos(16_666_666);
                     self.timer_id = ctx.request_timer(deadline);
@@ -265,26 +259,23 @@ impl<T: Data> Widget<T> for WorkArea<T> {
         _data: &T,
         _env: &Env,
     ) -> Size {
-        let size = bc.max();
+        bc.max()
+    }
+
+    fn paint(&mut self, ctx: &mut PaintCtx, _: &T, _env: &Env) {
+        let size = ctx.size();
+        let rect = Rect::from_origin_size(Point::ORIGIN, size).to_rounded_rect(4.0);
 
         core::push_set_view_port_size_request_command(core::commands::Vec2i::new(
             size.width as i32,
             size.height as i32,
         ));
 
-        size
-    }
+        tech_paws_core::frame_start();
+        tech_paws_core::step();
 
-    // The paint method gets called last, after an event flow.
-    // It goes event -> update -> layout -> paint, and each method can influence the next.
-    // Basically, anything that changes the appearance of a widget causes a paint.
-    fn paint(&mut self, ctx: &mut PaintCtx, _: &T, _env: &Env) {
-        // Let's draw a picture with Piet!
-
-        // Clear the whole widget with the color of your choice
-        // (ctx.size() returns the size of the layout rect we're painting in)
-        let size = ctx.size();
-        let rect = Rect::from_origin_size(Point::ORIGIN, size).to_rounded_rect(4.0);
+        self.flush();
+        self.handle_exec_commands();
 
         ctx.clip(rect);
         ctx.fill(rect, &Color::WHITE);
@@ -292,56 +283,5 @@ impl<T: Data> Widget<T> for WorkArea<T> {
         self.handle_render_commands(ctx);
 
         tech_paws_core::frame_end();
-
-        // // Note: ctx also has a `clear` method, but that clears the whole context,
-        // // and we only want to clear this widget's area.
-
-        // // Create an arbitrary bezier path
-        // let mut path = BezPath::new();
-        // path.move_to(Point::ORIGIN);
-        // path.quad_to((80.0, 90.0), (size.width, size.height));
-        // // Create a color
-        // let stroke_color = Color::rgb8(0, 128, 0);
-        // // Stroke the path with thickness 1.0
-        // ctx.stroke(path, &stroke_color, 1.0);
-
-        // // Rectangles: the path for practical people
-        // let rect = Rect::from_origin_size((10., 10.), (100., 100.));
-        // // Note the Color:rgba8 which includes an alpha channel (7F in this case)
-        // let fill_color = Color::rgba8(0x00, 0x00, 0x00, 0x7F);
-        // ctx.fill(rect, &fill_color);
-
-        // // Text is easy, if you ignore all these unwraps. Just pick a font and a size.
-        // let font = ctx
-        //     .text()
-        //     .new_font_by_name("Segoe UI", 24.0)
-        //     .build()
-        //     .unwrap();
-        // // Here's where we actually use the UI state
-        // let layout = ctx
-        //     .text()
-        //     .new_text_layout(&font, "Hello world", std::f64::INFINITY)
-        //     .build()
-        //     .unwrap();
-
-        // // Let's rotate our text slightly. First we save our current (default) context:
-        // ctx.with_save(|ctx| {
-        //     // Now we can rotate the context (or set a clip path, for instance):
-        //     ctx.transform(Affine::rotate(0.1));
-        //     ctx.draw_text(&layout, (80.0, 40.0), &fill_color);
-        // });
-        // // When we exit with_save, the original context's rotation is restored
-
-        // // Let's burn some CPU to make a (partially transparent) image buffer
-        // let image_data = make_image_data(256, 256);
-        // let image = ctx
-        //     .make_image(256, 256, &image_data, ImageFormat::RgbaSeparate)
-        //     .unwrap();
-        // // The image is automatically scaled to fit the rect you pass to draw_image
-        // ctx.draw_image(
-        //     &image,
-        //     Rect::from_origin_size(Point::ORIGIN, size),
-        //     InterpolationMode::Bilinear,
-        // );
     }
 }
