@@ -159,6 +159,14 @@ impl AccessorDecorator for TerminalTextboxDecorator {
             theme::CURSOR_COLOR,
             env.get(theme::TERMINAL_TEXT_BOX_TEXT_COLOR),
         );
+        env.set(
+            theme::SELECTION_COLOR,
+            env.get(theme::TERMINAL_TEXT_BOX_SELECTION_COLOR),
+        );
+        env.set(
+            theme::TEXT_BOX_SELECTION_TEXT_COLOR,
+            env.get(theme::TERMINAL_TEXT_BOX_SELECTION_TEXT_COLOR),
+        );
     }
 }
 

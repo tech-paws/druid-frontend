@@ -1,8 +1,7 @@
-use druid::kurbo::BezPath;
 use druid::kurbo::Line;
-use druid::piet::{FontBuilder, ImageFormat, InterpolationMode, Text, TextLayoutBuilder};
+use druid::piet::{FontBuilder, Text, TextLayoutBuilder};
 use druid::widget::prelude::*;
-use druid::{Affine, Color, Data, LocalizedString, Point, Rect, TimerToken, WindowDesc};
+use druid::{Color, Data, Point, Rect, TimerToken};
 use std::marker::PhantomData;
 use std::time::Duration;
 

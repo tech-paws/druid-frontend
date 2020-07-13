@@ -63,6 +63,14 @@ impl<T: Data> Widget<T> for Focus<T> {
 
                 ctx.request_paint();
             }
+            Event::Command(cmd) if cmd.is(commands::REQUEST_FOCUS) => {
+                let widget_id = *cmd.get_unchecked(commands::REQUEST_FOCUS);
+
+                if widget_id == ctx.widget_id() {
+                    ctx.request_focus();
+                    ctx.request_paint();
+                }
+            }
             _ => (),
         }
 
