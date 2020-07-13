@@ -36,16 +36,16 @@ impl<T: Data> Stack<T> {
 impl<T: Data> Widget<T> for Stack<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
         match event {
-            // Event::MouseDown(e) | Event::MouseUp(e) | Event::MouseMove(e) => {
-            //     if let Some(active_child) = self
-            //         .children
-            //         .iter_mut()
-            //         .rev()
-            //         // .find(|child| child.layout_rect().contains(e.pos))
-            //     {
-            //         active_child.event(ctx, event, data, env);
-            //     }
-            // }
+            Event::MouseDown(e) | Event::MouseUp(e) | Event::MouseMove(e) => {
+                if let Some(active_child) = self
+                    .children
+                    .iter_mut()
+                    .rev()
+                    .find(|child| child.layout_rect().contains(e.pos))
+                {
+                    active_child.event(ctx, event, data, env);
+                }
+            }
             _ => {
                 for child in &mut self.children.iter_mut().rev() {
                     child.event(ctx, event, data, env);

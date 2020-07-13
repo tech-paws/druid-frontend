@@ -1,4 +1,4 @@
-use druid::widget::{Align, Container, Either, Flex, Focus, FocusScope, Label, SizedBox, Split};
+use druid::widget::{Align, Container, Flex, Focus, FocusScope, Label, SizedBox, Split};
 use druid::{
     commands, AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, HotKey,
     KbKey, Lens, LocalizedString, Target, Widget, WidgetExt, WidgetId, WindowDesc, WindowId,
@@ -15,6 +15,7 @@ use crate::ui::widgets::EditableText;
 // use crate::ui::widgets::FocusScope;
 use crate::ui::widgets::Stack;
 use crate::ui::widgets::TextBox;
+use crate::ui::widgets::Either;
 
 use crate::ui::kit::ButtonDecorator;
 use crate::ui::kit::FocusDecorator;
