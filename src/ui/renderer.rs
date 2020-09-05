@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use tech_paws_core as core;
 
-pub struct WorkArea<T> {
+pub struct Renderer<T> {
     timer_id: TimerToken,
     data: PhantomData<T>,
 
@@ -20,9 +20,9 @@ pub struct WorkArea<T> {
     str_data: Vec<String>,
 }
 
-impl<T: Data> WorkArea<T> {
+impl<T: Data> Renderer<T> {
     pub fn new() -> Self {
-        WorkArea {
+        Renderer {
             timer_id: TimerToken::INVALID,
             data: PhantomData,
             camera_position: core::commands::Vec2f::new(0., 0.),
@@ -210,7 +210,7 @@ impl<T: Data> WorkArea<T> {
     }
 }
 
-impl<T: Data> Widget<T> for WorkArea<T> {
+impl<T: Data> Widget<T> for Renderer<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, _data: &mut T, _env: &Env) {
         match event {
             Event::MouseDown(point) => {
