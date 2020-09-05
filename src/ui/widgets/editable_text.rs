@@ -26,7 +26,7 @@ use druid::commands;
 use crate::theme;
 use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
 use druid::piet::{
-    FontFamily, PietText, PietTextLayout, PietTextLayoutBuilder, RenderContext, Text,
+    FontFamily, PietText, PietTextLayout, RenderContext, Text,
     TextAttribute, TextLayout, TextLayoutBuilder,
 };
 
@@ -436,9 +436,6 @@ impl Widget<String> for EditableText {
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let height = env.get(theme::BORDERED_WIDGET_HEIGHT);
         let selection_color = env.get(theme::SELECTION_COLOR);
-        let selection_text_color = env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR);
-        let text_color = env.get(theme::LABEL_COLOR);
-        let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
         let is_focused = ctx.focus_node().is_focused;
@@ -470,12 +467,6 @@ impl Widget<String> for EditableText {
             // let text_pos = Point::new(0.0 + PADDING_LEFT, text_height + PADDING_TOP);
             let top_padding = (height - text_size.height).min(PADDING_TOP).max(0.);
             let text_pos = Point::new(PADDING_LEFT, top_padding);
-
-            let color = if data.is_empty() {
-                &placeholder_color
-            } else {
-                &text_color
-            };
 
             rc.draw_text(&text_layout, text_pos);
 

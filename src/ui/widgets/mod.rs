@@ -3,7 +3,7 @@ mod editable_text;
 // pub mod focus;
 // pub mod focus_scope;
 mod stack;
-mod textbox;
+pub mod textbox;
 mod either;
 
 pub use accessor_decorator::AccessorDecoratorWidget as AccessorDecorator;

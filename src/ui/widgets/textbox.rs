@@ -15,15 +15,13 @@
 //! A textbox widget.
 
 use druid::{
-    Application, BoxConstraints, Cursor, Env, Event, EventCtx, HotKey, KbKey, LayoutCtx, LifeCycle,
-    LifeCycleCtx, PaintCtx, Rect, Selector, TimerToken, UpdateCtx, Widget, WidgetExt, WidgetPod,
+    BoxConstraints, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Rect,
+    UpdateCtx, Widget, WidgetExt, WidgetPod,
 };
 
 use druid::widget::Focus;
 
-use crate::theme;
-
-use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
+use druid::kurbo::{Point, Size};
 
 use crate::ui::kit::decorators::*;
 use crate::ui::widgets::editable_text::TEXT_BOX_PLACEHOLDER;
@@ -32,7 +30,7 @@ use crate::ui::widgets::EditableText;
 // use crate::ui::widgets::Focus;
 
 trait SetEnv {
-    fn set_env(&mut self, env: &mut Env) {}
+    fn set_env(&mut self, _env: &mut Env) {}
 }
 
 /// A widget that allows user text input.
@@ -62,7 +60,7 @@ impl TextBox {
     }
 
     /// Builder-style method to set the `TextBox`'s placeholder text.
-    pub fn with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
+    pub fn _with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
         self
     }

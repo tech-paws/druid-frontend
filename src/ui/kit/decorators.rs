@@ -15,7 +15,7 @@ pub struct TerminalTextboxDecorator;
 pub struct FocusDecorator;
 
 impl ButtonDecorator {
-    pub fn new() -> Self {
+    pub fn _new() -> Self {
         ButtonDecorator
     }
 }
@@ -67,7 +67,7 @@ impl ButtonColors {
 }
 
 struct TextboxColors {
-    bg_color: Color,
+    _bg_color: Color,
     text_color: Color,
 }
 
@@ -75,19 +75,19 @@ impl TextboxColors {
     fn new(data: &AccessorData, env: &Env) -> Self {
         if data.is_active || data.has_focus {
             TextboxColors {
-                bg_color: env.get(theme::TEXT_BOX_CLICK_COLOR),
+                _bg_color: env.get(theme::TEXT_BOX_CLICK_COLOR),
                 text_color: env.get(theme::TEXT_BOX_CLICK_TEXT_COLOR),
             }
         }
         else if data.is_hot {
             TextboxColors {
-                bg_color: env.get(theme::TEXT_BOX_HOVER_COLOR),
+                _bg_color: env.get(theme::TEXT_BOX_HOVER_COLOR),
                 text_color: env.get(theme::TEXT_BOX_HOVER_TEXT_COLOR),
             }
         }
         else {
             TextboxColors {
-                bg_color: env.get(theme::TEXT_BOX_COLOR),
+                _bg_color: env.get(theme::TEXT_BOX_COLOR),
                 text_color: env.get(theme::TEXT_BOX_TEXT_COLOR),
             }
         }
@@ -112,14 +112,13 @@ impl AccessorDecorator for ButtonDecorator {
 }
 
 impl AccessorDecorator for TextboxDecorator {
-    fn paint_background(&mut self, ctx: &mut PaintCtx, data: &AccessorData, env: &Env) {
+    fn paint_background(&mut self, ctx: &mut PaintCtx, _data: &AccessorData, env: &Env) {
         let size = ctx.size();
 
         let rounded_rect = Rect::from_origin_size(Point::ORIGIN, size)
             .inset(0.5)
             .to_rounded_rect(env.get(theme::BUTTON_BORDER_RADIUS));
 
-        let colors = TextboxColors::new(data, env);
         let gradient = LinearGradient::new(
             UnitPoint::TOP,
             UnitPoint::BOTTOM,
