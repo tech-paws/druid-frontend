@@ -12,6 +12,6 @@ impl SchemeEditorState {
     }
 }
 
-pub fn build_ui() -> impl Widget<UiState> {
+pub fn build_ui() -> impl Widget<SchemeEditorState> {
     Renderer::new()
 }

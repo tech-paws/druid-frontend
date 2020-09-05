@@ -1,12 +1,13 @@
 use druid::{
     commands, AppDelegate, AppLauncher, Command, DelegateCtx, Env, Event, HotKey, KbKey,
-    LocalizedString, Target, WindowDesc, WindowId,
+    LocalizedString, Target, Widget, WidgetExt, WindowDesc, WindowId,
 };
 
 use crate::theme;
 use crate::ui::debug;
 use crate::ui::scheme_editor;
 use crate::ui::ui_state::UiState;
+use crate::ui::widgets::Stack;
 
 const WINDOW_TITLE: LocalizedString<UiState> = LocalizedString::new("Tech.Paws");
 
@@ -47,8 +48,14 @@ impl AppDelegate<UiState> for TechPawsAppDelegate {
     }
 }
 
+pub fn build_ui() -> impl Widget<UiState> {
+    Stack::new()
+        .with_child(scheme_editor::build_ui().lens(UiState::scheme_editor))
+        .with_child(debug::build_ui().lens(UiState::debug))
+}
+
 pub fn run() {
-    let main_window = WindowDesc::new(scheme_editor::build_ui)
+    let main_window = WindowDesc::new(build_ui)
         .title(WINDOW_TITLE)
         .window_size((1024.0, 700.0));
 
