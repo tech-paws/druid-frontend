@@ -26,7 +26,8 @@ use druid::commands;
 use crate::theme;
 use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
 use druid::piet::{
-    FontBuilder, PietText, PietTextLayout, RenderContext, Text, TextLayout, TextLayoutBuilder,
+    FontFamily, PietText, PietTextLayout, PietTextLayoutBuilder, RenderContext, Text,
+    TextAttribute, TextLayout, TextLayoutBuilder,
 };
 
 use druid::text::{
@@ -80,19 +81,50 @@ impl EditableText {
     }
 
     /// Calculate the PietTextLayout from the given text, font, and font size
-    fn get_layout(&self, piet_text: &mut PietText, text: &str, env: &Env) -> PietTextLayout {
+    fn get_layout(
+        &self,
+        piet_text: &mut PietText,
+        text: &str,
+        env: &Env,
+        use_placeholder_color: bool,
+        use_selection_color: bool,
+    ) -> PietTextLayout {
         let font_name = env.get(theme::FONT_NAME);
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         // TODO: caching of both the format and the layout
+        // let font = piet_text
+        //     .new_font_by_name(font_name, font_size)
+        //     .build()
+        //     .unwrap();
         let font = piet_text
-            .new_font_by_name(font_name, font_size)
-            .build()
-            .unwrap();
+            .font_family(font_name)
+            .unwrap_or(FontFamily::SYSTEM_UI);
 
+        // let selection_text_color = env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR);
+        // let text_color = env.get(theme::LABEL_COLOR);
+        // let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
+        let text_color = if use_selection_color {
+            env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR)
+        } else if use_placeholder_color {
+            env.get(theme::PLACEHOLDER_COLOR)
+        } else {
+            env.get(theme::LABEL_COLOR)
+        };
+
+        // piet_text.
+        //     .new_text_layout(&font, &text.to_string(), std::f64::INFINITY)
+        //     .build()
+        //     .unwrap()
         piet_text
-            .new_text_layout(&font, &text.to_string(), std::f64::INFINITY)
+            .new_text_layout(&text.to_string())
+            .font(font, font_size)
+            .default_attribute(TextAttribute::ForegroundColor(text_color))
             .build()
             .unwrap()
+        // .range_attribute(
+        //     self.selection.range(),
+        //     TextAttribute::ForegroundColor(selection_text_color),
+        // )
     }
 
     /// Insert text at the cursor position.
@@ -145,8 +177,7 @@ impl EditableText {
             EditAction::Click(action) => {
                 if action.mods.shift() {
                     self.selection.end = action.column;
-                }
-                else {
+                } else {
                     self.caret_to(text, action.column);
                 }
             }
@@ -169,8 +200,7 @@ impl EditableText {
             let new_cursor = offset_for_delete_backwards(&self.selection, text);
             text.edit(new_cursor..cursor, "");
             self.caret_to(text, new_cursor);
-        }
-        else {
+        } else {
             text.edit(self.selection.range(), "");
             self.caret_to(text, self.selection.min());
         }
@@ -183,8 +213,7 @@ impl EditableText {
                 self.move_selection(Movement::Right, text, false);
                 self.delete_backward(text);
             }
-        }
-        else {
+        } else {
             self.delete_backward(text);
         }
     }
@@ -193,28 +222,22 @@ impl EditableText {
     /// the grapheme cluster closest to that point.
     fn offset_for_point(&self, point: Point, layout: &PietTextLayout) -> usize {
         // Translating from screenspace to Piet's text layout representation.
-        // We need to account for hscroll_offset state and EditableText's padding.
+        // We need to account for hscroll_offset state and TextBox's padding.
         let translated_point = Point::new(point.x + self.hscroll_offset - PADDING_LEFT, point.y);
         let hit_test = layout.hit_test_point(translated_point);
-        hit_test.metrics.text_position
+        hit_test.idx
     }
 
     /// Given an offset (in bytes) of a valid grapheme cluster, return
     /// the corresponding x coordinate of that grapheme on the screen.
     fn x_for_offset(&self, layout: &PietTextLayout, offset: usize) -> f64 {
-        if let Some(position) = layout.hit_test_text_position(offset) {
-            position.point.x
-        }
-        else {
-            //TODO: what is the correct fallback here?
-            0.0
-        }
+        layout.hit_test_text_position(offset).point.x
     }
 
     /// Calculate a stateful scroll offset
     fn update_hscroll(&mut self, layout: &PietTextLayout) {
         let cursor_x = self.x_for_offset(layout, self.cursor());
-        let overall_text_width = layout.width();
+        let overall_text_width = layout.size().width;
 
         let padding = PADDING_LEFT * 2.;
         if overall_text_width < self.width {
@@ -223,15 +246,13 @@ impl EditableText {
             // [***I*  ]
             // ^
             self.hscroll_offset = 0.;
-        }
-        else if cursor_x > self.width + self.hscroll_offset - padding {
+        } else if cursor_x > self.width + self.hscroll_offset - padding {
             // If cursor goes past right side, bump the offset
             //       ->
             // **[****I]****
             //   ^
             self.hscroll_offset = cursor_x - self.width + padding;
-        }
-        else if cursor_x < self.hscroll_offset {
+        } else if cursor_x < self.hscroll_offset {
             // If cursor goes past left side, match the offset
             //    <-
             // **[I****]****
@@ -251,7 +272,7 @@ impl Widget<String> for EditableText {
         // Guard against external changes in data?
         self.selection = self.selection.constrain_to(data);
 
-        let mut text_layout = self.get_layout(&mut ctx.text(), &data, env);
+        let mut text_layout = self.get_layout(&mut ctx.text(), &data, env, false, false);
         let mut edit_action = None;
 
         match event {
@@ -313,10 +334,9 @@ impl Widget<String> for EditableText {
 
                 if is_focused {
                     self.do_edit_action(EditAction::SelectAll, data);
-                }
-                else {
+                } else {
                     // TODO: https://github.com/linebender/druid/pull/1092
-                    // self.do_edit_action(EditAction::SelectNone, data);
+                    self.do_edit_action(EditAction::Move(Movement::LeftOfLine), data);
                 }
             }
             Event::Command(cmd) if cmd.is(RESET_BLINK) => self.reset_cursor_blink(ctx),
@@ -353,8 +373,7 @@ impl Widget<String> for EditableText {
         if let Some(edit_action) = edit_action {
             let is_select_all = if let EditAction::SelectAll = &edit_action {
                 true
-            }
-            else {
+            } else {
                 false
             };
 
@@ -362,7 +381,7 @@ impl Widget<String> for EditableText {
             self.reset_cursor_blink(ctx);
 
             if !is_select_all {
-                text_layout = self.get_layout(&mut ctx.text(), &data, env);
+                text_layout = self.get_layout(&mut ctx.text(), &data, env, false, false);
                 self.update_hscroll(&text_layout);
             }
         }
@@ -405,12 +424,10 @@ impl Widget<String> for EditableText {
         let content = if data.is_empty() {
             if self.placeholder.is_empty() {
                 &placeholder
-            }
-            else {
+            } else {
                 &self.placeholder
             }
-        }
-        else {
+        } else {
             data
         };
 
@@ -424,7 +441,7 @@ impl Widget<String> for EditableText {
         let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
-        let is_focused = ctx.inside_focus();
+        let is_focused = ctx.focus_node().is_focused;
 
         // Paint the background
         let clip_rect = Size::new(self.width - BORDER_WIDTH, height).to_rect();
@@ -434,23 +451,33 @@ impl Widget<String> for EditableText {
             rc.clip(clip_rect);
 
             // Calculate layout
-            let text_layout = self.get_layout(&mut rc.text(), &content, env);
+            let text_layout = self.get_layout(
+                &mut rc.text(),
+                &content,
+                env,
+                data.is_empty(),
+                false,
+                // self.selection.is_caret(),
+            );
+            let text_layout_selection = self.get_layout(&mut rc.text(), &content, env, false, true);
+            let text_size = text_layout.size();
 
             // Shift everything inside the clip by the hscroll_offset
             rc.transform(Affine::translate((-self.hscroll_offset, 0.)));
 
             // Layout, measure, and draw text
-            let text_height = font_size * 0.8;
-            let text_pos = Point::new(0.0 + PADDING_LEFT, text_height + PADDING_TOP);
+            // let text_height = font_size * 0.8;
+            // let text_pos = Point::new(0.0 + PADDING_LEFT, text_height + PADDING_TOP);
+            let top_padding = (height - text_size.height).min(PADDING_TOP).max(0.);
+            let text_pos = Point::new(PADDING_LEFT, top_padding);
 
             let color = if data.is_empty() {
                 &placeholder_color
-            }
-            else {
+            } else {
                 &text_color
             };
 
-            rc.draw_text(&text_layout, text_pos, color);
+            rc.draw_text(&text_layout, text_pos);
 
             // Draw selection rect
             if !self.selection.is_caret() {
@@ -469,15 +496,23 @@ impl Widget<String> for EditableText {
                 );
                 rc.fill(selection_rect, &selection_color);
                 rc.clip(selection_rect);
-                rc.draw_text(&text_layout, text_pos, &selection_text_color);
+                rc.draw_text(&text_layout_selection, text_pos);
                 rc.clip(clip_rect);
             }
 
             // Paint the cursor if focused and there's no selection
             if is_focused && self.cursor_on && self.selection.is_caret() {
-                let cursor_x = self.x_for_offset(&text_layout, self.cursor());
-                let xy = text_pos + Vec2::new(cursor_x, 0. - font_size);
-                let x2y2 = xy + Vec2::new(0., font_size + 4.);
+                // let cursor_x = self.x_for_offset(&text_layout, self.cursor());
+                // let xy = text_pos + Vec2::new(cursor_x, 0. - font_size);
+                // let x2y2 = xy + Vec2::new(0., font_size + 4.);
+                // let line = Line::new(xy, x2y2);
+
+                // rc.stroke(line, &cursor_color, 2.);
+                let pos = text_layout.hit_test_text_position(self.cursor());
+                let metrics = text_layout.line_metric(pos.line).unwrap();
+                //let cursor_x = self.x_for_offset(&text_layout, self.cursor());
+                let xy = text_pos + Vec2::new(pos.point.x, -2.0);
+                let x2y2 = xy + Vec2::new(0., metrics.height);
                 let line = Line::new(xy, x2y2);
 
                 rc.stroke(line, &cursor_color, 2.);

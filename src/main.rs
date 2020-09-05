@@ -77,7 +77,7 @@ impl AppDelegate<SchemeEditorState> for TechPawsAppDelegate {
 pub fn main() {
     let main_window = WindowDesc::new(build_root_widget)
         .title(WINDOW_TITLE)
-        .window_size((400.0, 400.0));
+        .window_size((1024.0, 700.0));
 
     let initial_state = SchemeEditorState {
         terminal_command: "".into(),
@@ -112,7 +112,7 @@ fn build_root_widget() -> impl Widget<SchemeEditorState> {
         FocusDecorator::new(),
         AccessorDecorator::new(
             ButtonDecorator::new(),
-            Align::centered(Label::new("Content").padding((8.0, 2.0))).fix_width(100.0),
+            Align::centered(Label::new("Content").padding((8.0, 7.0))).fix_width(100.0),
         )
         .fix_height(24.0)
         .on_click(|_, _, _| println!("Hello World!"))

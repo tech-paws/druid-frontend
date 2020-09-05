@@ -73,7 +73,7 @@ impl<T: Data, A: AccessorDecorator> Widget<T> for AccessorDecoratorWidget<T, A> 
         let accessor_data = AccessorData {
             is_hot: ctx.is_hot(),
             is_active: ctx.is_active(),
-            has_focus: ctx.inside_focus(),
+            has_focus: ctx.focus_node().is_focused,
         };
 
         self.decorator.paint_background(ctx, &accessor_data, env);

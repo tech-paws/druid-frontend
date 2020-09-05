@@ -1,5 +1,5 @@
 use druid::kurbo::Line;
-use druid::piet::{FontBuilder, Text, TextLayoutBuilder};
+use druid::piet::{TextAttribute, FontFamily, Text, TextLayoutBuilder};
 use druid::widget::prelude::*;
 use druid::{Color, Data, Point, Rect, TimerToken};
 use std::marker::PhantomData;
@@ -102,26 +102,28 @@ impl<T: Data> WorkArea<T> {
             self.current_color.a,
         );
 
-        let font = ctx
-            .text()
-            .new_font_by_name("Segoe UI", 12.0)
-            .build()
-            .unwrap();
+        let font = FontFamily::SYSTEM_UI;
+
+        // let font = piet_text
+            // .font_family(font_name)
+            // .unwrap_or(FontFamily::SYSTEM_UI);
 
         for str in self.str_data.iter().rev() {
             let pos = self
                 .vec2f_data
                 .pop()
-                .map(|vec| Point::new(vec.x as f64, vec.y as f64 + 12.))
-                .unwrap_or(Point::new(0., 12.));
+                .map(|vec| Point::new(vec.x as f64, vec.y as f64))
+                .unwrap_or(Point::new(0., 0.));
 
             let layout = ctx
                 .text()
-                .new_text_layout(&font, str, std::f64::INFINITY)
+                .new_text_layout(&str)
+                .font(font.clone(), 12.)
+                .default_attribute(TextAttribute::ForegroundColor(color.clone()))
                 .build()
                 .unwrap();
 
-            ctx.draw_text(&layout, pos, &color);
+            ctx.draw_text(&layout, pos);
         }
 
         self.flush();
