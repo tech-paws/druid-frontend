@@ -1682,6 +1682,7 @@ dependencies = [
  "env_logger",
  "flatbuffers",
  "flatc-rust",
+ "futures",
  "fxhash",
  "lazy_static",
  "legion",

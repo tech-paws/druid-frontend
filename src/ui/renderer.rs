@@ -1,5 +1,5 @@
 use druid::kurbo::Line;
-use druid::piet::{TextAttribute, FontFamily, Text, TextLayoutBuilder};
+use druid::piet::{FontFamily, Text, TextAttribute, TextLayout, TextLayoutBuilder};
 use druid::widget::prelude::*;
 use druid::{Color, Data, Point, Rect, TimerToken};
 use std::marker::PhantomData;
@@ -11,9 +11,11 @@ pub struct Renderer<T> {
     timer_id: TimerToken,
     data: PhantomData<T>,
 
-    camera_position: core::commands::Vec2f,
+    camera_position: [core::commands::Vec2f; 2],
     current_color: core::commands::Color,
 
+    current_camera_id: usize,
+    int32_data: Vec<i32>,
     vec2f_data: Vec<core::commands::Vec2f>,
     vec2i_data: Vec<core::commands::Vec2i>,
     color_data: Vec<core::commands::Color>,
@@ -25,7 +27,9 @@ impl<T: Data> Renderer<T> {
         Renderer {
             timer_id: TimerToken::INVALID,
             data: PhantomData,
-            camera_position: core::commands::Vec2f::new(0., 0.),
+            current_camera_id: 0,
+            camera_position: [core::commands::Vec2f::zero(), core::commands::Vec2f::zero()],
+            int32_data: Vec::new(),
             vec2f_data: Vec::new(),
             vec2i_data: Vec::new(),
             color_data: Vec::new(),
@@ -45,6 +49,9 @@ impl<T: Data> Renderer<T> {
                 match command.command_type {
                     core::commands::ExecutionCommandType::PushVec2f => {
                         self.vec2f_data.push(command.data.vec2f);
+                    }
+                    core::commands::ExecutionCommandType::PushInt32 => {
+                        self.int32_data.push(command.data.int32);
                     }
                     core::commands::ExecutionCommandType::UpdateCameraPosition => {
                         self.update_camera_position();
@@ -69,6 +76,9 @@ impl<T: Data> Renderer<T> {
                     core::commands::RenderCommandType::PushVec2f => {
                         self.vec2f_data.push(command.data.vec2f);
                     }
+                    core::commands::RenderCommandType::PushInt32 => {
+                        self.int32_data.push(command.data.int32);
+                    }
                     core::commands::RenderCommandType::PushString => {
                         self.str_data.push(command.data.string.data_to_string());
                     }
@@ -84,6 +94,10 @@ impl<T: Data> Renderer<T> {
                     core::commands::RenderCommandType::DrawPoints => {
                         self.draw_points(ctx);
                     }
+                    core::commands::RenderCommandType::SetCamera => {
+                        self.current_camera_id = self.int32_data[0] as usize;
+                        self.int32_data.clear();
+                    }
                     core::commands::RenderCommandType::SetColorUniform => {
                         self.current_color = self.color_data[0];
                         self.color_data.clear();
@@ -92,6 +106,62 @@ impl<T: Data> Renderer<T> {
                 }
             }
         }
+    }
+
+    fn handle_render_state(&mut self, ctx: &mut PaintCtx) {
+        let commands = core::c_get_render_commands();
+
+        for i in 0..commands.length {
+            // TODO: doc
+            unsafe {
+                let command = commands.items.offset(i as isize).as_ref().unwrap();
+
+                match command.command_type {
+                    core::commands::RenderCommandType::PushColor => {
+                        self.color_data.push(command.data.color);
+                    }
+                    core::commands::RenderCommandType::PushVec2f => {
+                        self.vec2f_data.push(command.data.vec2f);
+                    }
+                    core::commands::RenderCommandType::PushInt32 => {
+                        self.int32_data.push(command.data.int32);
+                    }
+                    core::commands::RenderCommandType::PushString => {
+                        self.str_data.push(command.data.string.data_to_string());
+                    }
+                    core::commands::RenderCommandType::DrawText => {
+                        self.render_state_text(ctx);
+                    }
+                    core::commands::RenderCommandType::SetCamera => {
+                        self.current_camera_id = self.int32_data[0] as usize;
+                        self.int32_data.clear();
+                    }
+                    _ => (),
+                }
+            }
+        }
+    }
+
+    fn render_state_text(&mut self, ctx: &mut PaintCtx) {
+        let font = FontFamily::SYSTEM_UI;
+
+        for str in self.str_data.iter().rev() {
+            let layout = ctx
+                .text()
+                .new_text_layout(&str)
+                .font(font.clone(), 12.)
+                .build()
+                .unwrap();
+
+            let bounds = layout.image_bounds();
+
+            core::push_text_size(core::commands::Vec2f::new(
+                bounds.size().width as f32,
+                bounds.size().height as f32,
+            ));
+        }
+
+        self.flush();
     }
 
     fn draw_text(&mut self, ctx: &mut PaintCtx) {
@@ -103,17 +173,19 @@ impl<T: Data> Renderer<T> {
         );
 
         let font = FontFamily::SYSTEM_UI;
-
-        // let font = piet_text
-            // .font_family(font_name)
-            // .unwrap_or(FontFamily::SYSTEM_UI);
+        let camera_position = self.camera_position[self.current_camera_id];
 
         for str in self.str_data.iter().rev() {
             let pos = self
                 .vec2f_data
                 .pop()
-                .map(|vec| Point::new(vec.x as f64, vec.y as f64))
-                .unwrap_or(Point::new(0., 0.));
+                .map(|vec| {
+                    Point::new(
+                        (camera_position.x + vec.x) as f64,
+                        (camera_position.y + vec.y) as f64,
+                    )
+                })
+                .unwrap_or_else(|| Point::new(camera_position.x as f64, camera_position.y as f64));
 
             let layout = ctx
                 .text()
@@ -142,6 +214,8 @@ impl<T: Data> Renderer<T> {
             self.current_color.a,
         );
 
+        let camera_position = self.camera_position[self.current_camera_id];
+
         for chunk in self.vec2f_data.as_slice().chunks(2) {
             if chunk.len() < 2 {
                 break;
@@ -152,12 +226,12 @@ impl<T: Data> Renderer<T> {
 
             let line = Line::new(
                 Point::new(
-                    (p1.x as f64 + self.camera_position.x as f64).floor() + 0.5,
-                    (p1.y as f64 + self.camera_position.y as f64).floor() + 0.5,
+                    (p1.x as f64 + camera_position.x as f64).floor() + 0.5,
+                    (p1.y as f64 + camera_position.y as f64).floor() + 0.5,
                 ),
                 Point::new(
-                    (p2.x as f64 + self.camera_position.x as f64).floor() + 0.5,
-                    (p2.y as f64 + self.camera_position.y as f64).floor() + 0.5,
+                    (p2.x as f64 + camera_position.x as f64).floor() + 0.5,
+                    (p2.y as f64 + camera_position.y as f64).floor() + 0.5,
                 ),
             );
             ctx.stroke(line, &color, 1.);
@@ -173,13 +247,14 @@ impl<T: Data> Renderer<T> {
             self.current_color.b,
             self.current_color.a,
         );
+        let camera_position = self.camera_position[self.current_camera_id];
 
         for chunk in self.vec2f_data.as_slice().chunks(2) {
             if chunk.len() < 2 {
                 break;
             }
 
-            let pos = chunk[0];
+            let pos = chunk[0] + camera_position;
             let size = chunk[1];
 
             let rect = Rect::from_origin_size(
@@ -197,12 +272,14 @@ impl<T: Data> Renderer<T> {
     }
 
     fn update_camera_position(&mut self) {
-        self.camera_position = self.vec2f_data[0];
+        let camera_id = self.int32_data[0] as usize;
+        self.camera_position[camera_id] = self.vec2f_data[0];
         self.flush();
     }
 
     fn flush(&mut self) {
         self.current_color = core::commands::Color::rgb(0., 0., 0.);
+        self.int32_data.clear();
         self.vec2f_data.clear();
         self.vec2i_data.clear();
         self.color_data.clear();
@@ -273,10 +350,20 @@ impl<T: Data> Widget<T> for Renderer<T> {
         ));
 
         tech_paws_core::frame_start();
+
         tech_paws_core::step();
+        self.handle_exec_commands();
+        tech_paws_core::flush();
+
+        tech_paws_core::render_pass1();
+        self.handle_render_state(ctx);
+        self.flush();
+
+        tech_paws_core::flush();
+        tech_paws_core::render_pass2();
 
         self.flush();
-        self.handle_exec_commands();
+        tech_paws_core::render_state_flush();
 
         ctx.clip(rect);
         ctx.fill(rect, &Color::WHITE);
