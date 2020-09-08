@@ -27,22 +27,11 @@ use crate::ui::kit::decorators::*;
 use crate::ui::widgets::editable_text::TEXT_BOX_PLACEHOLDER;
 use crate::ui::widgets::AccessorDecorator;
 use crate::ui::widgets::EditableText;
-// use crate::ui::widgets::Focus;
-
-trait SetEnv {
-    fn set_env(&mut self, _env: &mut Env) {}
-}
 
 /// A widget that allows user text input.
 pub struct TextBox {
     placeholder: String,
     child: WidgetPod<String, Box<dyn Widget<String>>>,
-}
-
-impl SetEnv for TextBox {
-    fn set_env(&mut self, env: &mut Env) {
-        env.set(TEXT_BOX_PLACEHOLDER, &self.placeholder);
-    }
 }
 
 impl TextBox {
@@ -60,7 +49,7 @@ impl TextBox {
     }
 
     /// Builder-style method to set the `TextBox`'s placeholder text.
-    pub fn _with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
+    pub fn with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
         self
     }
@@ -95,7 +84,7 @@ impl<'a> Widget<String> for TextBox {
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &String, env: &Env) {
         let mut new_env = env.clone();
-        self.set_env(&mut new_env);
+        new_env.set(TEXT_BOX_PLACEHOLDER, &self.placeholder);
         self.child.paint(ctx, data, &new_env);
     }
 }
