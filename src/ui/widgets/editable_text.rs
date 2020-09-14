@@ -22,13 +22,16 @@ use druid::{
 };
 
 use druid::commands;
+use druid::TextLayout;
 
 use crate::theme;
-use druid::kurbo::{Affine, Line, Point, RoundedRect, Size, Vec2};
+use druid::kurbo::{Affine, Insets, Line, Point, RoundedRect, Size, Vec2};
 use druid::piet::{
-    FontFamily, PietText, PietTextLayout, RenderContext, Text,
-    TextAttribute, TextLayout, TextLayoutBuilder,
+    FontFamily, PietText, PietTextLayout, RenderContext, Text, TextAttribute, TextLayoutBuilder,
 };
+
+const TEXT_INSETS: Insets = Insets::new(4.0, 2.0, 0.0, 2.0);
+const CURSOR_BLINK_DURATION: Duration = Duration::from_millis(500);
 
 use druid::text::{
     movement, offset_for_delete_backwards, BasicTextInput, EditAction, MouseAction, Movement,
@@ -49,6 +52,7 @@ pub const TEXT_BOX_PLACEHOLDER: Key<&str> = Key::new("textbox-placeholder");
 /// A widget that allows user text input.
 #[derive(Debug, Clone)]
 pub struct EditableText {
+    text: TextLayout,
     placeholder: String,
     width: f64,
     hscroll_offset: f64,
@@ -65,6 +69,7 @@ impl EditableText {
     /// Create a new EditableText widget
     pub fn new() -> EditableText {
         Self {
+            text: TextLayout::new(""),
             width: 0.0,
             hscroll_offset: 0.,
             selection: Selection::caret(0),
@@ -81,51 +86,53 @@ impl EditableText {
     }
 
     /// Calculate the PietTextLayout from the given text, font, and font size
-    fn get_layout(
-        &self,
-        piet_text: &mut PietText,
-        text: &str,
-        env: &Env,
-        use_placeholder_color: bool,
-        use_selection_color: bool,
-    ) -> PietTextLayout {
-        let font_name = env.get(theme::FONT_NAME);
-        let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        // TODO: caching of both the format and the layout
-        // let font = piet_text
-        //     .new_font_by_name(font_name, font_size)
-        //     .build()
-        //     .unwrap();
-        let font = piet_text
-            .font_family(font_name)
-            .unwrap_or(FontFamily::SYSTEM_UI);
+    // fn get_layout(
+    //     &self,
+    //     piet_text: &mut PietText,
+    //     text: &str,
+    //     env: &Env,
+    //     use_placeholder_color: bool,
+    //     use_selection_color: bool,
+    // ) -> PietTextLayout {
+    //     // let font_name = env.get(theme::REGULAR_FONT_NAME);
+    //     let font_size = env.get(theme::TEXT_SIZE_NORMAL);
+    //     // TODO: caching of both the format and the layout
+    //     // let font = piet_text
+    //     //     .new_font_by_name(font_name, font_size)
+    //     //     .build()
+    //     //     .unwrap();
+    //     let font = piet_text
+    //         .font_family("Hack")
+    //         .unwrap_or(FontFamily::SYSTEM_UI);
 
-        // let selection_text_color = env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR);
-        // let text_color = env.get(theme::LABEL_COLOR);
-        // let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
-        let text_color = if use_selection_color {
-            env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR)
-        } else if use_placeholder_color {
-            env.get(theme::PLACEHOLDER_COLOR)
-        } else {
-            env.get(theme::LABEL_COLOR)
-        };
+    //     // let selection_text_color = env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR);
+    //     // let text_color = env.get(theme::LABEL_COLOR);
+    //     // let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
+    //     let text_color = if use_selection_color {
+    //         env.get(theme::TEXT_BOX_SELECTION_TEXT_COLOR)
+    //     } else if use_placeholder_color {
+    //         env.get(theme::PLACEHOLDER_COLOR)
+    //     } else {
+    //         env.get(theme::LABEL_COLOR)
+    //     };
 
-        // piet_text.
-        //     .new_text_layout(&font, &text.to_string(), std::f64::INFINITY)
-        //     .build()
-        //     .unwrap()
-        piet_text
-            .new_text_layout(&text.to_string())
-            .font(font, font_size)
-            .default_attribute(TextAttribute::ForegroundColor(text_color))
-            .build()
-            .unwrap()
-        // .range_attribute(
-        //     self.selection.range(),
-        //     TextAttribute::ForegroundColor(selection_text_color),
-        // )
-    }
+    //     // piet_text.
+    //     //     .new_text_layout(&font, &text.to_string(), std::f64::INFINITY)
+    //     //     .build()
+    //     //     .unwrap()
+
+    //     piet_text
+    //         .new_text_layout(&text.to_string())
+    //         .font(font, font_size)
+    //         .default_attribute(TextAttribute::ForegroundColor(text_color))
+    //         .build()
+    //         .unwrap()
+
+    //     // .range_attribute(
+    //     //     self.selection.range(),
+    //     //     TextAttribute::ForegroundColor(selection_text_color),
+    //     // )
+    // }
 
     /// Insert text at the cursor position.
     /// Replaces selected text if there's a selection.
@@ -177,7 +184,8 @@ impl EditableText {
             EditAction::Click(action) => {
                 if action.mods.shift() {
                     self.selection.end = action.column;
-                } else {
+                }
+                else {
                     self.caret_to(text, action.column);
                 }
             }
@@ -200,7 +208,8 @@ impl EditableText {
             let new_cursor = offset_for_delete_backwards(&self.selection, text);
             text.edit(new_cursor..cursor, "");
             self.caret_to(text, new_cursor);
-        } else {
+        }
+        else {
             text.edit(self.selection.range(), "");
             self.caret_to(text, self.selection.min());
         }
@@ -213,46 +222,49 @@ impl EditableText {
                 self.move_selection(Movement::Right, text, false);
                 self.delete_backward(text);
             }
-        } else {
+        }
+        else {
             self.delete_backward(text);
         }
     }
 
     /// For a given point, returns the corresponding offset (in bytes) of
     /// the grapheme cluster closest to that point.
-    fn offset_for_point(&self, point: Point, layout: &PietTextLayout) -> usize {
+    fn offset_for_point(&self, point: Point) -> usize {
         // Translating from screenspace to Piet's text layout representation.
         // We need to account for hscroll_offset state and TextBox's padding.
-        let translated_point = Point::new(point.x + self.hscroll_offset - PADDING_LEFT, point.y);
-        let hit_test = layout.hit_test_point(translated_point);
-        hit_test.idx
+        let translated_point = Point::new(point.x + self.hscroll_offset - TEXT_INSETS.x0, point.y);
+        self.text.text_position_for_point(translated_point)
     }
 
     /// Given an offset (in bytes) of a valid grapheme cluster, return
     /// the corresponding x coordinate of that grapheme on the screen.
-    fn x_for_offset(&self, layout: &PietTextLayout, offset: usize) -> f64 {
-        layout.hit_test_text_position(offset).point.x
+    fn x_pos_for_offset(&self, offset: usize) -> f64 {
+        self.text.point_for_text_position(offset).x
     }
 
     /// Calculate a stateful scroll offset
-    fn update_hscroll(&mut self, layout: &PietTextLayout) {
-        let cursor_x = self.x_for_offset(layout, self.cursor());
-        let overall_text_width = layout.size().width;
+    fn update_hscroll(&mut self) {
+        let cursor_x = self.x_pos_for_offset(self.cursor());
+        let overall_text_width = self.text.size().width;
 
-        let padding = PADDING_LEFT * 2.;
+        // when advancing the cursor, we want some additional padding
+        let padding = TEXT_INSETS.x0 * 2.;
         if overall_text_width < self.width {
             // There's no offset if text is smaller than text box
             //
             // [***I*  ]
             // ^
             self.hscroll_offset = 0.;
-        } else if cursor_x > self.width + self.hscroll_offset - padding {
+        }
+        else if cursor_x > self.width + self.hscroll_offset - padding {
             // If cursor goes past right side, bump the offset
             //       ->
             // **[****I]****
             //   ^
             self.hscroll_offset = cursor_x - self.width + padding;
-        } else if cursor_x < self.hscroll_offset {
+        }
+        else if cursor_x < self.hscroll_offset {
             // If cursor goes past left side, match the offset
             //    <-
             // **[I****]****
@@ -263,7 +275,7 @@ impl EditableText {
 
     fn reset_cursor_blink(&mut self, ctx: &mut EventCtx) {
         self.cursor_on = true;
-        self.cursor_timer = ctx.request_timer(CURSOR_BLINK_DRUATION);
+        self.cursor_timer = ctx.request_timer(CURSOR_BLINK_DURATION);
     }
 }
 
@@ -272,7 +284,7 @@ impl Widget<String> for EditableText {
         // Guard against external changes in data?
         self.selection = self.selection.constrain_to(data);
 
-        let mut text_layout = self.get_layout(&mut ctx.text(), &data, env, false, false);
+        // let mut text_layout = self.get_layout(&mut ctx.text(), &data, env, false, false);
         let mut edit_action = None;
 
         match event {
@@ -281,7 +293,7 @@ impl Widget<String> for EditableText {
                 ctx.set_active(true);
 
                 if !mouse.focus {
-                    let cursor_offset = self.offset_for_point(mouse.pos, &text_layout);
+                    let cursor_offset = self.offset_for_point(mouse.pos);
                     edit_action = Some(EditAction::Click(MouseAction {
                         row: 0,
                         column: cursor_offset,
@@ -294,7 +306,7 @@ impl Widget<String> for EditableText {
             Event::MouseMove(mouse) => {
                 ctx.set_cursor(&Cursor::IBeam);
                 if ctx.is_active() {
-                    let cursor_offset = self.offset_for_point(mouse.pos, &text_layout);
+                    let cursor_offset = self.offset_for_point(mouse.pos);
                     edit_action = Some(EditAction::Drag(MouseAction {
                         row: 0,
                         column: cursor_offset,
@@ -334,9 +346,9 @@ impl Widget<String> for EditableText {
 
                 if is_focused {
                     self.do_edit_action(EditAction::SelectAll, data);
-                } else {
-                    // TODO: https://github.com/linebender/druid/pull/1092
-                    self.do_edit_action(EditAction::Move(Movement::LeftOfLine), data);
+                }
+                else {
+                    self.do_edit_action(EditAction::Move(Movement::StartOfDocument), data);
                 }
             }
             Event::Command(cmd) if cmd.is(RESET_BLINK) => self.reset_cursor_blink(ctx),
@@ -371,34 +383,47 @@ impl Widget<String> for EditableText {
         }
 
         if let Some(edit_action) = edit_action {
-            let is_select_all = if let EditAction::SelectAll = &edit_action {
-                true
-            } else {
-                false
-            };
+            let is_select_all = matches!(edit_action, EditAction::SelectAll);
 
             self.do_edit_action(edit_action, data);
             self.reset_cursor_blink(ctx);
+            if data.is_empty() {
+                self.text.set_text(self.placeholder.as_str());
+            }
+            else {
+                self.text.set_text(data.as_str());
+            }
+            self.text.rebuild_if_needed(ctx.text(), env);
 
             if !is_select_all {
-                text_layout = self.get_layout(&mut ctx.text(), &data, env, false, false);
-                self.update_hscroll(&text_layout);
+                self.update_hscroll();
             }
         }
     }
 
-    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _data: &String, _env: &Env) {
+    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &String, env: &Env) {
         match event {
+            LifeCycle::WidgetAdded => {
+                if data.is_empty() {
+                    self.text.set_text(self.placeholder.as_str());
+                    self.text.set_text_color(theme::PLACEHOLDER_COLOR);
+                }
+                else {
+                    self.text.set_text(data.as_str());
+                }
+                self.text.rebuild_if_needed(ctx.text(), env);
+            }
             // an open question: should we be able to schedule timers here?
             LifeCycle::FocusChanged(true) => {
                 // TODO: Send from Focus widget
-                ctx.submit_command(RESET_BLINK, ctx.widget_id());
+                ctx.submit_command(RESET_BLINK.to(ctx.widget_id()));
             }
             _ => (),
         }
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &String, _data: &String, _env: &Env) {
+    fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &String, _data: &String, env: &Env) {
+        self.text.rebuild_if_needed(ctx.text(), env);
         ctx.request_paint();
     }
 
@@ -418,18 +443,21 @@ impl Widget<String> for EditableText {
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &String, env: &Env) {
-        let placeholder = String::from_str(env.try_get(TEXT_BOX_PLACEHOLDER).unwrap_or(""));
+        // let placeholder = String::from_str(env.try_get(TEXT_BOX_PLACEHOLDER).unwrap_or(""));
 
         // Guard against changes in data following `event`
-        let content = if data.is_empty() {
-            if self.placeholder.is_empty() {
-                &placeholder
-            } else {
-                &self.placeholder
-            }
-        } else {
-            data
-        };
+        // let content = if data.is_empty() {
+        //     if self.placeholder.is_empty() {
+        //         &placeholder
+        //     }
+        //     else {
+        //         &self.placeholder
+        //     }
+        // }
+        // else {
+        //     data
+        // };
+        let content = data;
 
         self.selection = self.selection.constrain_to(data);
 
@@ -448,16 +476,16 @@ impl Widget<String> for EditableText {
             rc.clip(clip_rect);
 
             // Calculate layout
-            let text_layout = self.get_layout(
-                &mut rc.text(),
-                &content,
-                env,
-                data.is_empty(),
-                false,
-                // self.selection.is_caret(),
-            );
-            let text_layout_selection = self.get_layout(&mut rc.text(), &content, env, false, true);
-            let text_size = text_layout.size();
+            // let text_layout = self.get_layout(
+            //     &mut rc.text(),
+            //     &content,
+            //     env,
+            //     data.is_empty(),
+            //     false,
+            //     // self.selection.is_caret(),
+            // );
+            // let text_layout_selection = self.get_layout(&mut rc.text(), &content, env, false, true);
+            let text_size = self.text.size();
 
             // Shift everything inside the clip by the hscroll_offset
             rc.transform(Affine::translate((-self.hscroll_offset, 0.)));
@@ -468,45 +496,41 @@ impl Widget<String> for EditableText {
             let top_padding = (height - text_size.height).min(PADDING_TOP).max(0.);
             let text_pos = Point::new(PADDING_LEFT, top_padding);
 
-            rc.draw_text(&text_layout, text_pos);
+            // rc.draw_text(&text_layout, text_pos);
+            self.text.draw(rc, text_pos);
 
             // Draw selection rect
             if !self.selection.is_caret() {
-                let (left, right) = (self.selection.min(), self.selection.max());
-                let left_offset = self.x_for_offset(&text_layout, left);
-                let right_offset = self.x_for_offset(&text_layout, right);
+                for sel in self.text.rects_for_range(self.selection.range()) {
+                    let sel = sel + text_pos.to_vec2();
+                    let rounded = sel.to_rounded_rect(1.0);
+                    rc.fill(rounded, &selection_color);
+                }
 
-                let selection_width = right_offset - left_offset;
+                // let (left, right) = (self.selection.min(), self.selection.max());
+                // let left_offset = self.x_for_offset(&text_layout, left);
+                // let right_offset = self.x_for_offset(&text_layout, right);
 
-                let selection_pos = Point::new(left_offset + PADDING_LEFT - 1., PADDING_TOP - 2.);
+                // let selection_width = right_offset - left_offset;
 
-                let selection_rect = RoundedRect::from_origin_size(
-                    selection_pos,
-                    Size::new(selection_width + 2., font_size + 4.).to_vec2(),
-                    1.,
-                );
-                rc.fill(selection_rect, &selection_color);
-                rc.clip(selection_rect);
-                rc.draw_text(&text_layout_selection, text_pos);
-                rc.clip(clip_rect);
+                // let selection_pos = Point::new(left_offset + PADDING_LEFT - 1., PADDING_TOP - 2.);
+
+                // let selection_rect = RoundedRect::from_origin_size(
+                //     selection_pos,
+                //     Size::new(selection_width + 2., font_size + 4.).to_vec2(),
+                //     1.,
+                // );
+                // rc.fill(selection_rect, &selection_color);
+                // rc.clip(selection_rect);
+                // rc.draw_text(&text_layout_selection, text_pos);
+                // rc.clip(clip_rect);
             }
 
             // Paint the cursor if focused and there's no selection
-            if is_focused && self.cursor_on && self.selection.is_caret() {
-                // let cursor_x = self.x_for_offset(&text_layout, self.cursor());
-                // let xy = text_pos + Vec2::new(cursor_x, 0. - font_size);
-                // let x2y2 = xy + Vec2::new(0., font_size + 4.);
-                // let line = Line::new(xy, x2y2);
-
-                // rc.stroke(line, &cursor_color, 2.);
-                let pos = text_layout.hit_test_text_position(self.cursor());
-                let metrics = text_layout.line_metric(pos.line).unwrap();
-                //let cursor_x = self.x_for_offset(&text_layout, self.cursor());
-                let xy = text_pos + Vec2::new(pos.point.x, -2.0);
-                let x2y2 = xy + Vec2::new(0., metrics.height);
-                let line = Line::new(xy, x2y2);
-
-                rc.stroke(line, &cursor_color, 2.);
+            if is_focused && self.cursor_on {
+                let line = self.text.cursor_line_for_text_position(self.cursor());
+                let line = line + text_pos.to_vec2();
+                rc.stroke(line, &cursor_color, 1.);
             }
         });
 

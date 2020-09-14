@@ -934,9 +934,9 @@ dependencies = [
 
 [[package]]
 name = "kurbo"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "305989d523da0de59dd5e9b66c7c1eb2bcf7c18f538059f21a42ddf72b7333f7"
+checksum = "ed9be561444b7e4c4ac33b4fa36af1f996ccca1f14840ea1a09ba034289502ed"
 dependencies = [
  "arrayvec",
 ]
@@ -1149,18 +1149,18 @@ dependencies = [
 
 [[package]]
 name = "piet"
-version = "0.2.0-pre2"
+version = "0.2.0-pre3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8acf8bab7b3c4ae83495259dde0424f3e90fbd6b75efa3f72efd04cfc5b67d4e"
+checksum = "ea034654cccde975d400a32ba8ddf0addebb4832a57180fa31e25ab593d38356"
 dependencies = [
  "kurbo",
 ]
 
 [[package]]
 name = "piet-cairo"
-version = "0.2.0-pre2"
+version = "0.2.0-pre3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f33f10139631d78df3d43c052a7633a98a8edbcdc524a6aea4b0281a01013e33"
+checksum = "47b3fd836f83703eb29f0908905ae01f381098baff0bcf732a29a279c6c098be"
 dependencies = [
  "cairo-rs",
  "piet",
@@ -1170,9 +1170,9 @@ dependencies = [
 
 [[package]]
 name = "piet-common"
-version = "0.2.0-pre2"
+version = "0.2.0-pre3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5136f6010d7225731d902610678160620844a57e34d88be020db292af347ac50"
+checksum = "36a565e3bcd6cc28148aee8f5e77efb539f09df04331ec216dc51bb21e9492dc"
 dependencies = [
  "cairo-rs",
  "cairo-sys-rs",
@@ -1189,9 +1189,9 @@ dependencies = [
 
 [[package]]
 name = "piet-coregraphics"
-version = "0.2.0-pre2"
+version = "0.2.0-pre3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69308f4b3741ef44c37428692b6f0532e25ab7ceb1c0bb8aaf888d29a082e99c"
+checksum = "9c3633b507ed42dba2f41a50fc3d7fecc54be79bc06b4cf27fea17cc7d234e09"
 dependencies = [
  "core-foundation",
  "core-foundation-sys",
@@ -1204,9 +1204,9 @@ dependencies = [
 
 [[package]]
 name = "piet-direct2d"
-version = "0.2.0-pre2"
+version = "0.2.0-pre3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d870d58e19ef49e46868cab6a071706d72dd72a5de08e9f4350648b2fd8433c"
+checksum = "f341c6529c3c09182c160f300525ce5380d72f48672157719d6ef44029811df1"
 dependencies = [
  "dwrote",
  "piet",
@@ -1217,9 +1217,9 @@ dependencies = [
 
 [[package]]
 name = "piet-web"
-version = "0.2.0-pre2"
+version = "0.2.0-pre3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95fc3a637ed21f0409f0fb87ef8ebd945636c90ebffdd70edb489a014f742e72"
+checksum = "050a649c9a046268573d6b4998da05e5114eccaf26bfade737a3e161eab60066"
 dependencies = [
  "js-sys",
  "piet",
@@ -1518,9 +1518,9 @@ dependencies = [
 
 [[package]]
 name = "simple_logger"
-version = "1.6.0"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fea0c4611f32f4c2bac73754f22dca1f57e6c1945e0590dae4e5f2a077b92367"
+checksum = "13a53ed2efd04911c8280f2da7bf9abd350c931b86bc7f9f2386fbafbf525ff9"
 dependencies = [
  "atty",
  "log",

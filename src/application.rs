@@ -34,10 +34,10 @@ impl AppDelegate<UiState> for TechPawsAppDelegate {
                     k_e if HotKey::new(None, KbKey::Character("`".into())).matches(k_e) => {
                         data.debug.show_terminal = !data.debug.show_terminal;
                         data.debug.terminal_command = "".into();
-                        ctx.submit_command(
-                            Command::new(commands::REQUEST_FOCUS, debug::TERMINAL_WIDGET_ID),
-                            Target::Widget(debug::TERMINAL_WIDGET_ID),
-                        );
+                        // ctx.submit_command(
+                            // Command::new(commands::REQUEST_FOCUS, debug::TERMINAL_WIDGET_ID),
+                            // Target::Widget(debug::TERMINAL_WIDGET_ID),
+                        // );
                         None
                     }
                     _ => Some(event),

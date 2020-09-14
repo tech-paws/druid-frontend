@@ -1,7 +1,7 @@
 use druid::kurbo::Line;
-use druid::piet::{FontFamily, Text, TextAttribute, TextLayout, TextLayoutBuilder};
+use druid::piet::{FontFamily, Text, TextAttribute, TextLayoutBuilder};
 use druid::widget::prelude::*;
-use druid::{Color, Data, Point, Rect, TimerToken};
+use druid::{Color, Data, Point, Rect, TextLayout, TimerToken};
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -20,6 +20,8 @@ pub struct Renderer<T> {
     vec2i_data: Vec<core::commands::Vec2i>,
     color_data: Vec<core::commands::Color>,
     str_data: Vec<String>,
+
+    text_layout: TextLayout,
 }
 
 impl<T: Data> Renderer<T> {
@@ -28,13 +30,14 @@ impl<T: Data> Renderer<T> {
             timer_id: TimerToken::INVALID,
             data: PhantomData,
             current_camera_id: 0,
-            camera_position: [core::commands::Vec2f::zero(), core::commands::Vec2f::zero()],
+            camera_position: [core::commands::Vec2f::ZERO, core::commands::Vec2f::ZERO],
             int32_data: Vec::new(),
             vec2f_data: Vec::new(),
             vec2i_data: Vec::new(),
             color_data: Vec::new(),
             str_data: Vec::new(),
             current_color: core::commands::Color::rgb(0., 0., 0.),
+            text_layout: TextLayout::new(""),
         }
     }
 
@@ -61,7 +64,7 @@ impl<T: Data> Renderer<T> {
         }
     }
 
-    fn handle_render_commands(&mut self, ctx: &mut PaintCtx) {
+    fn handle_render_commands(&mut self, ctx: &mut PaintCtx, env: &Env) {
         let commands = core::c_get_render_commands();
 
         for i in 0..commands.length {
@@ -83,7 +86,7 @@ impl<T: Data> Renderer<T> {
                         self.str_data.push(command.data.string.data_to_string());
                     }
                     core::commands::RenderCommandType::DrawText => {
-                        self.draw_text(ctx);
+                        self.draw_text(ctx, env);
                     }
                     core::commands::RenderCommandType::DrawLines => {
                         self.draw_lines(ctx);
@@ -108,7 +111,7 @@ impl<T: Data> Renderer<T> {
         }
     }
 
-    fn handle_render_state(&mut self, ctx: &mut PaintCtx) {
+    fn handle_render_state(&mut self, ctx: &mut PaintCtx, env: &Env) {
         let commands = core::c_get_render_commands();
 
         for i in 0..commands.length {
@@ -130,7 +133,7 @@ impl<T: Data> Renderer<T> {
                         self.str_data.push(command.data.string.data_to_string());
                     }
                     core::commands::RenderCommandType::DrawText => {
-                        self.render_state_text(ctx);
+                        self.render_state_text(ctx, env);
                     }
                     core::commands::RenderCommandType::SetCamera => {
                         self.current_camera_id = self.int32_data[0] as usize;
@@ -142,29 +145,30 @@ impl<T: Data> Renderer<T> {
         }
     }
 
-    fn render_state_text(&mut self, ctx: &mut PaintCtx) {
+    fn render_state_text(&mut self, ctx: &mut PaintCtx, env: &Env) {
         let font = FontFamily::SYSTEM_UI;
 
         for str in self.str_data.iter().rev() {
-            let layout = ctx
-                .text()
-                .new_text_layout(&str)
-                .font(font.clone(), 12.)
-                .build()
-                .unwrap();
-
-            let bounds = layout.image_bounds();
+            // let layout = ctx
+            //     .text()
+            //     .new_text_layout(&str)
+            //     .font(font.clone(), 12.)
+            //     .build()
+            //     .unwrap();
+            // let mut layout = TextLayout::new(String::from(str));
+            self.text_layout.set_text(String::from(str));
+            self.text_layout.rebuild_if_needed(ctx.text(), env);
 
             core::push_text_size(core::commands::Vec2f::new(
-                bounds.size().width as f32,
-                bounds.size().height as f32,
+                self.text_layout.size().width as f32,
+                self.text_layout.size().height as f32,
             ));
         }
 
         self.flush();
     }
 
-    fn draw_text(&mut self, ctx: &mut PaintCtx) {
+    fn draw_text(&mut self, ctx: &mut PaintCtx, env: &Env) {
         let color = Color::rgba(
             self.current_color.r,
             self.current_color.g,
@@ -187,15 +191,19 @@ impl<T: Data> Renderer<T> {
                 })
                 .unwrap_or_else(|| Point::new(camera_position.x as f64, camera_position.y as f64));
 
-            let layout = ctx
-                .text()
-                .new_text_layout(&str)
-                .font(font.clone(), 12.)
-                .default_attribute(TextAttribute::ForegroundColor(color.clone()))
-                .build()
-                .unwrap();
-
-            ctx.draw_text(&layout, pos);
+            self.text_layout.set_text(String::from(str));
+            self.text_layout.set_text_size(12.);
+            self.text_layout.set_text_color(color.clone());
+            // let layout = ctx
+            //     .text()
+            //     .new_text_layout(&str)
+            //     .font(font.clone(), 12.)
+            //     .default_attribute(TextAttribute::ForegroundColor(color.clone()))
+            //     .build()
+            //     .unwrap();
+            // ctx.draw_text(&layout, pos);
+            self.text_layout.rebuild_if_needed(ctx.text(), env);
+            self.text_layout.draw(ctx, pos);
         }
 
         self.flush();
@@ -340,7 +348,7 @@ impl<T: Data> Widget<T> for Renderer<T> {
         bc.max()
     }
 
-    fn paint(&mut self, ctx: &mut PaintCtx, _: &T, _env: &Env) {
+    fn paint(&mut self, ctx: &mut PaintCtx, _: &T, env: &Env) {
         let size = ctx.size();
         let rect = Rect::from_origin_size(Point::ORIGIN, size).to_rounded_rect(4.0);
 
@@ -356,7 +364,7 @@ impl<T: Data> Widget<T> for Renderer<T> {
         tech_paws_core::flush();
 
         tech_paws_core::render_pass1();
-        self.handle_render_state(ctx);
+        self.handle_render_state(ctx, env);
         self.flush();
 
         tech_paws_core::flush();
@@ -368,7 +376,7 @@ impl<T: Data> Widget<T> for Renderer<T> {
         ctx.clip(rect);
         ctx.fill(rect, &Color::WHITE);
 
-        self.handle_render_commands(ctx);
+        self.handle_render_commands(ctx, env);
 
         tech_paws_core::frame_end();
     }

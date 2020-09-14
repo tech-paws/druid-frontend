@@ -2,6 +2,7 @@ pub use druid::theme::*;
 
 use druid::{Color, Env, Key};
 
+pub const REGULAR_FONT_NAME: Key<String> = Key::new("paws.tech.regular_font_name");
 pub const BUTTON_COLOR: Key<Color> = Key::new("paws.tech.button_color");
 pub const BUTTON_HOVER_COLOR: Key<Color> = Key::new("paws.tech.button_hover_color");
 pub const BUTTON_CLICK_COLOR: Key<Color> = Key::new("paws.tech.button_click_color");

@@ -57,6 +57,7 @@ fn build_command_input() -> impl Widget<DebugState> {
                 .with_placeholder("Enter the command")
                 .lens(DebugState::terminal_command),
         )
+        .with_auto_focus(true)
         .with_id(TERMINAL_WIDGET_ID),
     )
     .padding(2.0)

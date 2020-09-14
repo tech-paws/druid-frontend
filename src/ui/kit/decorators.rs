@@ -15,7 +15,7 @@ pub struct TerminalTextboxDecorator;
 pub struct FocusDecorator;
 
 impl ButtonDecorator {
-    pub fn _new() -> Self {
+    pub fn new() -> Self {
         ButtonDecorator
     }
 }

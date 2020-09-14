@@ -8,8 +8,6 @@ mod either;
 
 pub use accessor_decorator::AccessorDecoratorWidget as AccessorDecorator;
 pub use editable_text::EditableText;
-// pub use focus::Focus;
-// pub use focus_scope::FocusScope;
 pub use stack::Stack;
 pub use textbox::TextBox;
 pub use either::Either;

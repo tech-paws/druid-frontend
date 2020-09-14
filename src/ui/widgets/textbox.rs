@@ -84,7 +84,7 @@ impl<'a> Widget<String> for TextBox {
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &String, env: &Env) {
         let mut new_env = env.clone();
-        new_env.set(TEXT_BOX_PLACEHOLDER, &self.placeholder);
+        // new_env.set(TEXT_BOX_PLACEHOLDER, &self.placeholder);
         self.child.paint(ctx, data, &new_env);
     }
 }
